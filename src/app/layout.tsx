@@ -52,6 +52,9 @@ export const metadata: Metadata = {
     description: 'Turn photos into viral AI rap videos in 3 minutes. Upload 1 or 2 selfies to get lip-synced rap duo & solo clips in Hotel Lobby style. Free preview.',
     images: ['https://phototorap.com/og-image.png'],
   },
+  verification: {
+    google: '39LvT32JAXqHe6XN0UfzabaOvk5DgT6L2MJXTsZfwWs',
+  },
 };
 
 export default function RootLayout({
