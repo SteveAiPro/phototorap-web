@@ -81,7 +81,16 @@ export default function GeneratorCard() {
   } | null>(null);
 
   const currentModelObj = MODELS.find((m) => m.id === selectedModel) || MODELS[0];
-  const requiredCredits = currentModelObj.credits;
+  
+  // Calculate credits: if duration is '15s', add 30% surcharge (rounded), otherwise base model credits
+  const calculateCredits = (baseCredits: number, dur: string) => {
+    if (dur === '15s') {
+      return Math.round(baseCredits * 1.3);
+    }
+    return baseCredits;
+  };
+
+  const requiredCredits = calculateCredits(currentModelObj.credits, duration);
 
   const occasions = [
     { key: 'birthday', label: t.generator.occasionBirthday },
@@ -345,8 +354,13 @@ export default function GeneratorCard() {
                         <div className="text-xs text-gray-400 mt-0.5">
                           {m.engine}
                         </div>
-                        <div className="text-xs font-bold text-[#FF6A00] mt-1.5">
-                          {m.credits} {t.generator.creditsTag}
+                        <div className="text-xs font-bold text-[#FF6A00] mt-1.5 flex items-center gap-1.5">
+                          <span>{calculateCredits(m.credits, duration)} {t.generator.creditsTag}</span>
+                          {duration === '15s' && (
+                            <span className="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">
+                              +30% (15s)
+                            </span>
+                          )}
                         </div>
                       </button>
                     );
@@ -388,13 +402,20 @@ export default function GeneratorCard() {
                       key={d}
                       type="button"
                       onClick={() => setDuration(d)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                      className={`relative px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                         duration === d
                           ? 'bg-[#FF6A00] text-black shadow-sm font-bold'
                           : 'border border-[#222533] bg-[#12141C] text-gray-300 hover:border-gray-500'
                       }`}
                     >
-                      {d}
+                      <span>{d}</span>
+                      {d === '15s' && (
+                        <span className={`ml-1 text-[10px] px-1 py-0.2 rounded font-mono ${
+                          duration === '15s' ? 'bg-black/20 text-black font-bold' : 'text-[#FF6A00] bg-[#FF6A00]/10'
+                        }`}>
+                          +30%
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
