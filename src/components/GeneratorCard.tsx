@@ -132,6 +132,7 @@ export default function GeneratorCard() {
           aspectRatio,
           topic: topicInput || selectedOccasion,
           mode: photoMode,
+          userId: user.id,
         }),
       });
 

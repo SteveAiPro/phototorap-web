@@ -57,6 +57,7 @@ endpoints.forEach(({ hostname, path }) => {
       port: 443,
       path,
       method: 'POST',
+      timeout: 5000,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Content-Length': Buffer.byteLength(postData),

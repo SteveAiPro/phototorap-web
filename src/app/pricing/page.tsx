@@ -22,13 +22,18 @@ export default function PricingPage() {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, email: user.email }),
+        body: JSON.stringify({ planId, email: user.email, userId: user.id }),
       });
       const data = await res.json();
-      if (data.success) {
-        // simulate instant credit refill upon successful payment
+      if (data.url) {
+        // Real Stripe Checkout redirect
+        window.location.href = data.url;
+      } else if (data.success && data.mode === 'simulation') {
+        // Simulated instant refill when Stripe keys not configured
         addCredits(credits);
         alert(`🎉 Payment Successful! ${credits} Credits added to your account.`);
+      } else if (data.error) {
+        alert(data.error);
       }
     } catch (e) {
       alert('Checkout error');
