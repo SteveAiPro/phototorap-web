@@ -2,27 +2,58 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { X, Mic2, Sparkles, Shield, ArrowRight } from 'lucide-react';
+import { X, Mic2, Sparkles, Shield, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function AuthModal() {
-  const { isAuthModalOpen, closeAuthModal, login } = useAuth();
+  const { isAuthModalOpen, closeAuthModal, loginWithGoogle, loginWithEmail } = useAuth();
   const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   if (!isAuthModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleGoogleLogin = async () => {
+    setIsSubmitting(true);
+    setNotice(null);
+    try {
+      await loginWithGoogle();
+    } catch (e: any) {
+      setNotice({ type: 'error', text: e.message || 'Google sign-in failed' });
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    login(email);
+    if (!email || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setNotice(null);
+    try {
+      const res = await loginWithEmail(email);
+      if (res.success) {
+        if (res.message) {
+          setNotice({ type: 'success', text: res.message });
+        } else {
+          closeAuthModal();
+        }
+      } else {
+        setNotice({ type: 'error', text: res.message || 'Failed to send magic link' });
+      }
+    } catch (err: any) {
+      setNotice({ type: 'error', text: err.message || 'Authentication error' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
       <div className="relative w-full max-w-md rounded-3xl border border-[#FF6A00]/40 bg-[#12141C] p-6 sm:p-8 shadow-2xl">
         {/* Close Button */}
         <button
           onClick={closeAuthModal}
-          className="absolute top-5 right-5 text-gray-400 hover:text-white"
+          className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
@@ -40,10 +71,29 @@ export default function AuthModal() {
           </p>
         </div>
 
-        {/* Google One-Click Login Simulation */}
+        {/* Notice feedback */}
+        {notice && (
+          <div
+            className={`mb-4 flex items-center gap-2 rounded-xl p-3 text-xs ${
+              notice.type === 'success'
+                ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+                : 'bg-red-500/10 border border-red-500/30 text-red-400'
+            }`}
+          >
+            {notice.type === 'success' ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+            ) : (
+              <AlertCircle className="h-4 w-4 shrink-0" />
+            )}
+            <span>{notice.text}</span>
+          </div>
+        )}
+
+        {/* Google One-Click Login */}
         <button
-          onClick={() => login('google_user@gmail.com')}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-[#222533] bg-[#181B26] py-3 text-xs font-bold text-white hover:border-[#FF6A00] transition-colors mb-4"
+          onClick={handleGoogleLogin}
+          disabled={isSubmitting}
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-[#222533] bg-[#181B26] py-3 text-xs font-bold text-white hover:border-[#FF6A00] hover:bg-[#1E2230] transition-colors mb-4 disabled:opacity-50"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path
@@ -76,20 +126,22 @@ export default function AuthModal() {
         </div>
 
         {/* Email Form */}
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleEmailSubmit} className="space-y-3">
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@example.com"
             required
+            disabled={isSubmitting}
             className="w-full rounded-xl border border-[#222533] bg-[#0A0C13] px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-[#FF6A00] focus:outline-none"
           />
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#FF6A00] py-3 text-xs font-black uppercase text-black hover:bg-[#FF7D1A] transition-colors"
+            disabled={isSubmitting}
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#FF6A00] py-3 text-xs font-black uppercase text-black hover:bg-[#FF7D1A] transition-colors disabled:opacity-50"
           >
-            <span>Continue</span>
+            <span>{isSubmitting ? 'Sending...' : 'Continue'}</span>
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>
