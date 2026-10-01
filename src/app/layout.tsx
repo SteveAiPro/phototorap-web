@@ -20,11 +20,29 @@ export const metadata: Metadata = {
       'x-default': 'https://phototorap.com',
     },
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   openGraph: {
     title: 'Photo to Rap: AI Rap Video Generator from Photos',
     description: 'Turn photos into viral AI rap videos in 3 minutes. Upload 1 or 2 selfies to get lip-synced rap duo & solo clips in Hotel Lobby style. Free preview.',
     url: 'https://phototorap.com',
     siteName: 'PhotoToRap AI',
+    images: [
+      {
+        url: 'https://phototorap.com/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Photo to Rap AI Video Generator',
+      },
+    ],
     locale: 'en_US',
     type: 'website',
   },
@@ -32,6 +50,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Photo to Rap: AI Rap Video Generator from Photos',
     description: 'Turn photos into viral AI rap videos in 3 minutes. Upload 1 or 2 selfies to get lip-synced rap duo & solo clips in Hotel Lobby style. Free preview.',
+    images: ['https://phototorap.com/og-image.png'],
   },
 };
 

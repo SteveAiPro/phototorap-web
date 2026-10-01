@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { AdBanner } from '@/components/AdBanner';
 import { GUIDES, Guide } from '@/data/guides';
 import { Clock, ArrowLeft, ArrowRight, Mic, Sparkles, BookOpen } from 'lucide-react';
 
@@ -104,9 +105,12 @@ export default function GuidePost({ params }: { params: { slug: string } }) {
           })}
         </article>
 
+        {/* In-content Advertisement Container */}
+        <AdBanner slot="guide-detail-mid" />
+
         {/* Related Guides / Silo Linking */}
         {related.length > 0 && (
-          <section className="mt-12">
+          <section className="mt-8">
             <h3 className="font-display text-xl font-bold text-white mb-6">Related Tutorials & Guides</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {related.map((r) => (
@@ -125,6 +129,38 @@ export default function GuidePost({ params }: { params: { slug: string } }) {
             </div>
           </section>
         )}
+
+        {/* Article Schema JSON-LD */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Article',
+              headline: guide.title,
+              description: guide.description,
+              image: `https://phototorap.com${guide.coverImage}`,
+              datePublished: guide.publishedAt,
+              author: {
+                '@type': 'Organization',
+                name: 'PhotoToRap AI Team',
+                url: 'https://phototorap.com',
+              },
+              publisher: {
+                '@type': 'Organization',
+                name: 'PhotoToRap AI',
+                logo: {
+                  '@type': 'ImageObject',
+                  url: 'https://phototorap.com/icon.png',
+                },
+              },
+              mainEntityOfPage: {
+                '@type': 'WebPage',
+                '@id': `https://phototorap.com/guides/${guide.slug}`,
+              },
+            }),
+          }}
+        />
       </main>
 
       <Footer />

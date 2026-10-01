@@ -4,6 +4,7 @@ import HeroSection from '@/components/HeroSection';
 import GuidesSection from '@/components/GuidesSection';
 import AuthModal from '@/components/AuthModal';
 import Footer from '@/components/Footer';
+import { AdBanner } from '@/components/AdBanner';
 
 export default function Home() {
   const jsonLd = {
@@ -80,6 +81,10 @@ export default function Home() {
       <HeroSection />
       <GuidesSection />
 
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <AdBanner slot="home-mid" />
+      </div>
+
       {/* FAQ Section */}
       <section id="faq" className="border-t border-[#222533] bg-[#090A0F] py-20 px-4 sm:px-6">
         <div className="mx-auto max-w-4xl">
@@ -112,6 +117,43 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'PhotoToRap AI',
+              url: 'https://phototorap.com',
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: 'https://phototorap.com/guides?q={search_term_string}',
+                'query-input': 'required name=search_term_string',
+              },
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'SoftwareApplication',
+              name: 'PhotoToRap AI Generator',
+              operatingSystem: 'All',
+              applicationCategory: 'MultimediaApplication',
+              offers: {
+                '@type': 'Offer',
+                price: '0.00',
+                priceCurrency: 'USD',
+              },
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: '4.9',
+                ratingCount: '2840',
+              },
+            },
+          ]),
+        }}
+      />
 
       <Footer />
     </div>
