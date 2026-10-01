@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { AdBanner } from '@/components/AdBanner';
 import { GUIDES, Guide } from '@/data/guides';
 import { Clock, ArrowLeft, ArrowRight, Mic, Sparkles, BookOpen } from 'lucide-react';
+import { marked } from 'marked';
 
 export async function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
@@ -81,29 +82,10 @@ export default function GuidePost({ params }: { params: { slug: string } }) {
         </div>
 
         {/* Post Content */}
-        <article className="prose prose-invert max-w-none text-gray-300 leading-relaxed space-y-5 text-sm sm:text-base border-b border-[#222533] pb-12">
-          {guide.content.split('\n\n').map((paragraph, idx) => {
-            if (paragraph.startsWith('## ')) {
-              return (
-                <h2 key={idx} className="font-display text-2xl font-bold text-white mt-8 mb-4">
-                  {paragraph.replace('## ', '')}
-                </h2>
-              );
-            }
-            if (paragraph.startsWith('### ')) {
-              return (
-                <h3 key={idx} className="font-display text-lg font-bold text-white mt-6 mb-2">
-                  {paragraph.replace('### ', '')}
-                </h3>
-              );
-            }
-            return (
-              <p key={idx} className="leading-relaxed">
-                {paragraph}
-              </p>
-            );
-          })}
-        </article>
+        <article
+          className="prose prose-invert max-w-none text-gray-300 leading-relaxed text-sm sm:text-base border-b border-[#222533] pb-12 [&>h2]:text-2xl [&>h2]:font-bold [&>h2]:text-white [&>h2]:mt-10 [&>h2]:mb-4 [&>h3]:text-lg [&>h3]:font-bold [&>h3]:text-white [&>h3]:mt-6 [&>h3]:mb-2 [&>p]:mb-5 [&>p]:leading-relaxed [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-5 [&>ul]:space-y-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-5 [&>ol]:space-y-2 [&>blockquote]:border-l-4 [&>blockquote]:border-[#FF6A00] [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:my-6 [&>blockquote]:text-gray-300 [&>table]:w-full [&>table]:my-6 [&>table]:border-collapse [&_th]:border [&_th]:border-[#222533] [&_th]:bg-[#12141C] [&_th]:p-3 [&_th]:text-left [&_th]:text-white [&_td]:border [&_td]:border-[#222533] [&_td]:p-3 [&_a]:text-[#FF6A00] [&_a]:underline [&_a:hover]:text-[#FF7D1A]"
+          dangerouslySetInnerHTML={{ __html: marked.parse(guide.content) }}
+        />
 
         {/* In-content Advertisement Container */}
         <AdBanner slot="guide-detail-mid" />
