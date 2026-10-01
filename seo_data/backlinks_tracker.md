@@ -80,19 +80,19 @@ Every download is 100% watermark-free and cleared for commercial use. Powered by
 | # | 平台名称 | 权重 DA / 估算流量 | 提交链接与入口 | 提交物料版本 / 锚文本 | 链接类型 | 状态 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | **Product Hunt** | **DA 91** · 4.5M/mo | [producthunt.com/posts/new](https://www.producthunt.com/posts/new) | PhotoToRap AI Rap Video Studio | Dofollow | 🟡 物料就绪，待按排期点火发布 |
-| 2 | **There's An AI For That** | **DA 68** · 3.0M/mo | [theresanaiforthat.com/submit/](https://theresanaiforthat.com/submit/) | PhotoToRap AI Video Maker | Dofollow | 🟡 免费通道排队中 |
+| 2 | **There's An AI For That** | **DA 68** · 3.0M/mo | [theresanaiforthat.com/submit/](https://theresanaiforthat.com/submit/) | PhotoToRap AI Video Maker | Dofollow | 🛡️ 触发 Cloudflare 盾 (需手动过盾) |
 | 3 | **Toolify.ai** | **DA 62** · 2.5M/mo | [toolify.ai/submit](https://www.toolify.ai/submit) | PhotoToRap AI Video | Dofollow | 🟡 社区排队通道就绪 |
 | 4 | **Futurepedia.io** | **DA 64** · 1.8M/mo | [futurepedia.io/submit-tool](https://www.futurepedia.io/submit-tool) | PhotoToRap - Turn Photos to Rap | Dofollow | 🟡 免费审核排队 |
-| 5 | **AlternativeTo** | **DA 81** · 6.0M/mo | [alternativeto.net/software/post/](https://alternativeto.net/software/post/) | PhotoToRap (Alt to Higgsfield) | Dofollow | 🟢 词条创建完成待审核 |
-| 6 | **SaaSHub** | **DA 68** · 1.2M/mo | [saashub.com/submit](https://www.saashub.com/submit) | PhotoToRap AI | Dofollow | 🟢 提交成功 (In Review) |
-| 7 | **Uneed.best** | **DA 55** · 250K/mo | [uneed.best/submit](https://www.uneed.best/submit) | PhotoToRap Hotel Lobby Duo | Dofollow | 🟡 免费通道物料就绪 |
+| 5 | **AlternativeTo** | **DA 81** · 6.0M/mo | [alternativeto.net/software/post/](https://alternativeto.net/software/post/) | PhotoToRap (Alt to Higgsfield) | Dofollow | ⚠️ 需登录社区账号创建 |
+| 6 | **SaaSHub** | **DA 68** · 1.2M/mo | [saashub.com/submit](https://www.saashub.com/submit) | PhotoToRap AI | Dofollow | 🟢 **已成功提交 (进入审核队列)** |
+| 7 | **Uneed.best** | **DA 55** · 250K/mo | [uneed.best/submit](https://www.uneed.best/submit) | PhotoToRap Hotel Lobby Duo | Dofollow | 🚀 **已成功提交并排期上线 (Tool ID: 56560)** |
 | 8 | **TopAI.tools** | **DA 54** · 800K/mo | [topai.tools/submit](https://topai.tools/submit) | PhotoToRap AI Music Video | Dofollow | 🟡 免费索引提交就绪 |
-| 9 | **Dang.ai** | **DA 52** · 300K/mo | [dang.ai/submit](https://dang.ai/submit) | PhotoToRap | Dofollow | 🟡 提交排队中 |
-| 10 | **StartupStash** | **DA 64** · 400K/mo | [startupstash.com/submit/](https://startupstash.com/submit/) | PhotoToRap Creator Studio | Dofollow | 🟡 已提交审核 (In Review) |
+| 9 | **Dang.ai** | **DA 52** · 300K/mo | [dang.ai/submit](https://dang.ai/submit) | PhotoToRap | Dofollow | ⚠️ 需反链验证与登录 |
+| 10 | **StartupStash** | **DA 64** · 400K/mo | [startupstash.com/submit/](https://startupstash.com/submit/) | PhotoToRap Creator Studio | Dofollow | 🟢 **已成功提交 (Typeform 审核就绪)** |
 | 11 | **BetaList** | **DA 70** · 350K/mo | [betalist.com/submit](https://betalist.com/submit) | PhotoToRap - AI Rap Duo Maker | Nofollow/Do | 🟡 免费预发布队列 |
-| 12 | **AI Valley** | **DA 50** · 200K/mo | [aivalley.ai/submit-tool/](https://aivalley.ai/submit-tool/) | PhotoToRap Freestyle Studio | Dofollow | 🟡 免费表单已填写 |
+| 12 | **AI Valley** | **DA 50** · 200K/mo | [aivalley.ai/submit-tool/](https://aivalley.ai/submit-tool/) | PhotoToRap Freestyle Studio | Dofollow | ❌ 站点 SMTP 邮件故障 |
 | 13 | **FutureTools.io** | **DA 58** · 900K/mo | [futuretools.io/submit-a-tool](https://www.futuretools.io/submit-a-tool) | PhotoToRap AI Video Generator | Dofollow | 🟡 提交审核中 |
-| 14 | **All The AI** | **DA 49** · 150K/mo | [alltheai.tech/submit](https://alltheai.tech/submit) | PhotoToRap | Dofollow | 🟢 提交成功 |
+| 14 | **All The AI** | **DA 49** · 150K/mo | [alltheai.tech/submit](https://alltheai.tech/submit) | PhotoToRap | Dofollow | 🔌 站点已下线 (SSL Error) |
 | 15 | **Insidr.ai** | **DA 51** · 250K/mo | [insidr.ai/submit-tools/](https://insidr.ai/submit-tools/) | PhotoToRap TikTok Video | Dofollow | 🟡 审核中 |
 | 16 | **AI Parabellum** | **DA 48** · 100K/mo | [aiparabellum.com/submit-tool/](https://aiparabellum.com/submit-tool/) | PhotoToRap AI Rap | Dofollow | 🟢 提交成功 |
 | 17 | **MicroLaunch** | **DA 46** · 80K/mo | [microlaunch.net/submit](https://microlaunch.net/submit) | PhotoToRap Video Studio | Dofollow | 🟡 独立开发者提交就绪 |
