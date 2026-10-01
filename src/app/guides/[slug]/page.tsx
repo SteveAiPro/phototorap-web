@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { AdBanner } from '@/components/AdBanner';
+import { AdsterraNativeBanner } from '@/components/AdsterraBanner';
 import { GUIDES, Guide } from '@/data/guides';
 import { Clock, ArrowLeft, ArrowRight, Mic, Sparkles, BookOpen } from 'lucide-react';
 import { marked } from 'marked';
@@ -88,7 +89,7 @@ export default function GuidePost({ params }: { params: { slug: string } }) {
         />
 
         {/* In-content Advertisement Container */}
-        <AdBanner slot="guide-detail-mid" />
+        <AdsterraNativeBanner />
 
         {/* Related Guides / Silo Linking */}
         {related.length > 0 && (

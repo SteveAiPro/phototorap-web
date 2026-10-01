@@ -5,6 +5,7 @@ import GuidesSection from '@/components/GuidesSection';
 import AuthModal from '@/components/AuthModal';
 import Footer from '@/components/Footer';
 import { AdBanner } from '@/components/AdBanner';
+import { AdsterraNativeBanner } from '@/components/AdsterraBanner';
 
 export default function Home() {
   const jsonLd = {
@@ -81,9 +82,7 @@ export default function Home() {
       <HeroSection />
       <GuidesSection />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <AdBanner slot="home-mid" />
-      </div>
+      <AdsterraNativeBanner />
 
       {/* FAQ Section */}
       <section id="faq" className="border-t border-[#222533] bg-[#090A0F] py-20 px-4 sm:px-6">
