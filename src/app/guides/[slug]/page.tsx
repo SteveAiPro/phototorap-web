@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { AdBanner } from '@/components/AdBanner';
 import { AdsterraNativeBanner } from '@/components/AdsterraBanner';
 import { GUIDES, Guide } from '@/data/guides';
 import { Clock, ArrowLeft, ArrowRight, Mic, Sparkles, BookOpen } from 'lucide-react';
