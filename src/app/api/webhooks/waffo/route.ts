@@ -16,9 +16,14 @@ export async function POST(req: Request) {
 
     let event: any;
     try {
-      event = verifyWebhook(rawBody, signature);
+      // 优先自动检验；若失败则显式指定 test 模式尝试
+      try {
+        event = verifyWebhook(rawBody, signature);
+      } catch (firstErr) {
+        event = verifyWebhook(rawBody, signature, { environment: 'test' });
+      }
     } catch (err: any) {
-      console.error('[webhooks/waffo] Signature verification failed:', err?.message);
+      console.error('[webhooks/waffo] Signature verification failed:', err?.message, 'sig:', signature);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
