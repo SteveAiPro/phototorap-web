@@ -43,11 +43,8 @@ export async function runSeedanceVideoGeneration(
     throw new Error('Replicate API token is not configured');
   }
 
-  // 默认使用 bytedance/seedance-2.0-mini，高级/旗舰 tier 可无缝路由到 seedance-2.0
-  const modelId =
-    params.modelTier === 'pro' || params.modelTier === 'flagship'
-      ? (process.env.REPLICATE_SEEDANCE_PRO_MODEL || 'bytedance/seedance-2.0')
-      : (process.env.REPLICATE_SEEDANCE_MODEL || 'bytedance/seedance-2.0-mini');
+  // 严格锁定调用 Replicate 官方 ByteDance Seedance 2.0 Mini
+  const modelId = 'bytedance/seedance-2.0-mini';
 
   // 根据舞台背景设计专属场景与光影
   const stagePromptMap: Record<string, string> = {
