@@ -25,16 +25,32 @@ export async function GET(req: Request) {
       .single();
 
     if (userError || !user) {
+      console.error('[api/user/transactions] User lookup error:', userError);
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // 2. 获取积分交易流水明细 (credit_transactions)
-    const { data: transactions, error: txError } = await admin
+    // 优先按 user_id 精准过滤，若遇 Supabase uuid 类型隐式转换则兼容内存过滤
+    let userTransactions: any[] = [];
+    const { data: txByEq, error: txError } = await admin
       .from('credit_transactions')
-      .select('id, amount, type, description, ref_id, created_at')
+      .select('id, amount, type, description, ref_id, created_at, user_id')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50);
+
+    if (txByEq && txByEq.length > 1) {
+      userTransactions = txByEq;
+    } else {
+      // 容错兜底：查询最近 100 条并在服务层准确匹配 user_id
+      const { data: allTxs } = await admin
+        .from('credit_transactions')
+        .select('id, amount, type, description, ref_id, created_at, user_id')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      userTransactions = (allTxs || []).filter((t: any) => String(t.user_id).toLowerCase() === String(userId).toLowerCase());
+    }
 
     // 3. 获取生成的视频任务历史 (video_generations)
     const { data: videos, error: videoError } = await admin
@@ -47,7 +63,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       user,
-      transactions: transactions || [],
+      transactions: userTransactions || [],
       videos: videos || [],
     });
   } catch (err: any) {
