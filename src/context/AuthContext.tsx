@@ -198,26 +198,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(updated);
     localStorage.setItem('phototorap_user', JSON.stringify(updated));
 
-    const supabase = createClient();
-    if (supabase && user.id && !user.id.startsWith('usr_')) {
-      // 1. 更新用户余额
-      supabase
-        .from('users')
-        .update({ credits: updated.credits, updated_at: new Date().toISOString() })
-        .eq('id', user.id)
-        .then();
-
-      // 2. 写入积分交易明细流水表 (credit_transactions)
-      supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: user.id,
-          amount,
-          type,
+    // 调用服务端高权限 API 同步更新数据库余额并写入 credit_transactions 流水
+    if (user.id && !user.id.startsWith('usr_')) {
+      fetch('/api/user/record-topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          credits: amount,
           description,
-          ref_id: 'topup_' + Date.now(),
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.balance !== undefined) {
+            setUser((prev) => (prev ? { ...prev, credits: data.balance } : prev));
+          }
         })
-        .then();
+        .catch((err) => console.error('[addCredits] Sync error:', err));
     }
   };
 
