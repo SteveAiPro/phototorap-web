@@ -16,19 +16,78 @@ export default function Home() {
         name: 'PhotoToRap AI',
         url: 'https://phototorap.com',
         description: 'Photo to Rap: AI Rap Video Generator from Photos. Turn selfies into viral rap duo and solo clips in the Hotel Lobby style in 3 minutes.',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: 'https://phototorap.com/guides?q={search_term_string}',
+          'query-input': 'required name=search_term_string',
+        },
       },
       {
-        '@type': 'WebApplication',
+        '@type': 'Organization',
+        '@id': 'https://phototorap.com/#organization',
         name: 'PhotoToRap AI',
         url: 'https://phototorap.com',
+        logo: 'https://phototorap.com/icon.png',
+        sameAs: [
+          'https://x.com/phototorap',
+          'https://www.producthunt.com/products/phototorap',
+          'https://www.saashub.com/phototorap-alternatives',
+          'https://www.uneed.best/tool/phototorap'
+        ],
+      },
+      {
+        '@type': 'SoftwareApplication',
+        '@id': 'https://phototorap.com/#software',
+        name: 'PhotoToRap AI Video Studio',
+        url: 'https://phototorap.com',
         applicationCategory: 'MultimediaApplication',
-        operatingSystem: 'All',
+        operatingSystem: 'Web, iOS, Android, macOS, Windows',
+        description: 'Automated AI rap video generator converting 1 or 2 portrait photos into 1080p lip-synced rap performances in Hotel Lobby style.',
         offers: {
           '@type': 'AggregateOffer',
           priceCurrency: 'USD',
-          lowPrice: '9.99',
-          highPrice: '99.00',
+          lowPrice: '0.00',
+          highPrice: '29.90',
+          offerCount: '3',
         },
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: '4.9',
+          ratingCount: '2840',
+          bestRating: '5',
+          worstRating: '1',
+        },
+      },
+      {
+        '@type': 'HowTo',
+        name: 'How to Make an AI Rap Video from Photos in 3 Minutes',
+        description: 'Step-by-step tutorial on generating a viral lip-synced rap video using PhotoToRap AI.',
+        step: [
+          {
+            '@type': 'HowToStep',
+            position: 1,
+            name: 'Upload Photos',
+            text: 'Upload 1 selfie for solo freestyle or 2 selfies for a duo rap battle performance.',
+          },
+          {
+            '@type': 'HowToStep',
+            position: 2,
+            name: 'Select Virtual Stage & Model',
+            text: 'Pick from 4 cinematic stages including the orange Hotel Lobby booth, Luxury Lobby, Studio Booth, or Street Cypher.',
+          },
+          {
+            '@type': 'HowToStep',
+            position: 3,
+            name: 'Customize Beats & Lyrics',
+            text: 'Optionally enter an occasion (Birthday, Best Friends, Roast) or custom lyrics topic.',
+          },
+          {
+            '@type': 'HowToStep',
+            position: 4,
+            name: 'Generate & Export 1080p Video',
+            text: 'Preview with 10 free credits and export unwatermarked 1080p MP4 ready for TikTok and Reels in under 3 minutes.',
+          },
+        ],
       },
       {
         '@type': 'VideoObject',
@@ -43,6 +102,14 @@ export default function Home() {
         mainEntity: [
           {
             '@type': 'Question',
+            name: 'What is PhotoToRap AI?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'PhotoToRap AI is a specialized cloud AI video maker that converts 1 or 2 static portrait selfies into 1080p lip-synced rap music videos in under 3 minutes, featuring authentic trap beats, original freestyle lyrics, and viral stages like the Hotel Lobby booth.',
+            },
+          },
+          {
+            '@type': 'Question',
             name: 'How does Photo to Rap AI work?',
             acceptedAnswer: {
               '@type': 'Answer',
@@ -54,7 +121,7 @@ export default function Home() {
             name: 'Can I do the viral Hotel Lobby Quavo & Takeoff trend?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'Yes! The Hotel Lobby Orange Booth is our default viral stage. It recreates the famous Quavo & Takeoff COLORS show studio setup with high quality audio and animation.',
+              text: 'Yes! The Hotel Lobby Orange Booth is our default viral stage. It recreates the famous Quavo & Takeoff COLORS show studio setup with high quality audio and animation without copyright takedowns.',
             },
           },
           {
@@ -62,7 +129,15 @@ export default function Home() {
             name: 'Is there a free preview before paying?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'Yes, every user gets 10 Free Credits on sign-in to render and watch their rap video free before unlocking full HD downloads.',
+              text: 'Yes, every user receives 10 Free Credits upon sign-in to test and preview full rap video rendering before choosing paid packages starting at $9.99.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'How is PhotoToRap different from Higgsfield or CapCut templates?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Unlike Higgsfield which requires complex motion transfer setups, or CapCut templates which paste one face over copyrighted tracks, PhotoToRap allows 2 real faces to trade verses in one tap with original royalty-free music and custom lyrics.',
             },
           },
         ],
@@ -107,51 +182,14 @@ export default function Home() {
             </div>
 
             <div className="rounded-2xl border border-[#222533] bg-[#12141C] p-5">
-              <h3 className="font-display text-base font-bold text-white mb-2">How do Credits work?</h3>
+              <h3 className="font-display text-base font-bold text-white mb-2">How is PhotoToRap different from Higgsfield or CapCut?</h3>
               <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
-                Every new user gets 10 Free Credits upon sign-in. Each 12-second rap video render consumes 10 Credits. If a generation ever fails, all credits are instantly refunded to your balance.
+                Unlike Higgsfield which requires complex motion transfer setups, or CapCut templates which paste one face over copyrighted tracks, PhotoToRap allows 2 real faces to trade verses in one tap with original royalty-free music and custom lyrics in under 3 minutes.
               </p>
             </div>
           </div>
         </div>
       </section>
-
-      {/* JSON-LD Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify([
-            {
-              '@context': 'https://schema.org',
-              '@type': 'WebSite',
-              name: 'PhotoToRap AI',
-              url: 'https://phototorap.com',
-              potentialAction: {
-                '@type': 'SearchAction',
-                target: 'https://phototorap.com/guides?q={search_term_string}',
-                'query-input': 'required name=search_term_string',
-              },
-            },
-            {
-              '@context': 'https://schema.org',
-              '@type': 'SoftwareApplication',
-              name: 'PhotoToRap AI Generator',
-              operatingSystem: 'All',
-              applicationCategory: 'MultimediaApplication',
-              offers: {
-                '@type': 'Offer',
-                price: '0.00',
-                priceCurrency: 'USD',
-              },
-              aggregateRating: {
-                '@type': 'AggregateRating',
-                ratingValue: '4.9',
-                ratingCount: '2840',
-              },
-            },
-          ]),
-        }}
-      />
 
       <Footer />
     </div>

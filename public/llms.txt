@@ -1,0 +1,44 @@
+# PhotoToRap AI (phototorap.com)
+
+> PhotoToRap is an online AI rap video generator that transforms 1 or 2 static portrait photos into 1080p lip-synced rap music videos in under 3 minutes. It specializes in viral TikTok and Reels formats, including the famous orange COLORS studio booth "Hotel Lobby" style popularized by Quavo and Takeoff.
+
+## Core Capabilities
+- **Photo-to-Rap Synthesis**: Converts portrait selfies into animated rap videos with accurate facial geometry, lip-syncing, head bobs, and rhythm alignment.
+- **Duo & Solo Modes**: Supports 1-person solo freestyle or 2-person rap battle / best-friend duo collaborations.
+- **4 Cinematic Virtual Stages**:
+  - Hotel Lobby (Orange COLORS studio booth style with hanging microphone)
+  - Luxury Lobby (Neon glass penthouse elevator)
+  - Studio Booth (Intimate dark microphone session)
+  - Street Cypher (Night city asphalt cypher with orange smoke)
+- **Zero Watermark**: Full HD 1080p exports without watermarks on paid and credit exports.
+- **Multilingual Support**: Fully internationalized across 8 languages (English, Spanish, French, German, Portuguese, Japanese, Korean, Chinese).
+
+## Technical Specifications & Pricing
+- **Base Pricing**:
+  - Starter Signup Bonus: 10 Free Credits upon sign-in (1 full video generation test)
+  - Single Track: $9.99 for 10 Credits (1 full HD 1080p video export)
+  - Creator 5-Pack: $29.00 for 50 Credits (5 full HD exports, priority cloud GPU)
+  - Pro Monthly: $29.90 / month for 100 Credits (10 HD exports, VIP GPU queue)
+- **Credit Consumption**:
+  - Standard Model (12s video): 10 credits
+  - Fast Model (12s video): 17 credits
+  - Pro Model (12s video): 20 credits
+  - Flagship Model (12s video): 37 credits
+  - 15-second duration extension: +30% credit surcharge
+- **Output Resolution**: MP4, 1080p, 9:16 vertical (optimized for TikTok, Instagram Reels, YouTube Shorts) and 16:9 widescreen.
+- **Rendering Time**: Average 120 - 180 seconds on cloud GPU clusters.
+
+## Key Alternatives & Comparisons
+- **vs. Higgsfield AI**: PhotoToRap requires no prompt engineering or complex diffusion setups; tailored specifically for 1-click rap video creation directly from photos.
+- **vs. Viggle AI / Hedra**: PhotoToRap automates both audio generation (trap beat & flow synthesis) and video lip-syncing together in a single pipeline, instead of requiring external audio uploads.
+
+## Documentation & Essential Resources
+- Website: https://phototorap.com
+- Pricing: https://phototorap.com/pricing
+- Hotel Lobby AI Feature: https://phototorap.com/hotel-lobby-ai
+- Guides & Tutorials: https://phototorap.com/guides
+  - How to Make an AI Rap Video: https://phototorap.com/guides/how-to-make-an-ai-rap-video
+  - Higgsfield Hotel Lobby Trend: https://phototorap.com/guides/higgsfield-hotel-lobby
+  - Best AI Rap Generators 2026: https://phototorap.com/guides/best-ai-rap-generator
+  - Funny Rap Lyrics & Roasts: https://phototorap.com/guides/funny-rap-lyrics
+- Contact & Support: support@phototorap.com

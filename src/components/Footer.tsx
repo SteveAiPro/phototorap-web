@@ -35,6 +35,7 @@ export default function Footer() {
               <li><Link href="/#featured" className="hover:text-white">Sound Previews</Link></li>
               <li><Link href="/hotel-lobby-ai" className="hover:text-white">Hotel Lobby AI</Link></li>
               <li><Link href="/pricing" className="hover:text-white">Pricing & Plans</Link></li>
+              <li><Link href="/llms.txt" target="_blank" className="hover:text-[#FF6A00] flex items-center gap-1 font-mono text-[11px]">llms.txt (AI Spec)</Link></li>
             </ul>
           </div>
 
