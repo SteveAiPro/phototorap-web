@@ -94,16 +94,17 @@ export async function addCredits(
 
   if (uerr2) return false;
 
-  const { error: terr } = await admin.from('credit_transactions').insert({
+  const { data: txData, error: terr } = await admin.from('credit_transactions').insert({
     user_id: userId,
     amount,
     type,
     description,
     ref_id: refId,
-  });
+  }).select();
 
   if (terr) {
-    console.warn('[credits] Warning: failed to insert credit transaction record', terr);
+    console.error('[credits] Error inserting credit transaction record:', terr);
+    throw new Error('Insert credit_transactions failed: ' + terr.message + ' (code: ' + terr.code + ')');
   }
 
   return true;
