@@ -122,8 +122,11 @@ export default function Navbar() {
                       <p className="font-bold text-white truncate">{user.name}</p>
                       <p className="text-[10px] text-gray-500 truncate">{user.email}</p>
                     </div>
+                    <Link href="/account" onClick={() => setUserDropdownOpen(false)} className="block px-2 py-1.5 rounded-lg text-gray-300 hover:bg-[#181B26] hover:text-[#FF6A00] font-medium">
+                      Credits & Account
+                    </Link>
                     <Link href="/pricing" onClick={() => setUserDropdownOpen(false)} className="block px-2 py-1.5 rounded-lg text-gray-300 hover:bg-[#181B26] hover:text-[#FF6A00]">
-                      Buy Credits
+                      Top Up Credits
                     </Link>
                     <button
                       onClick={() => {
