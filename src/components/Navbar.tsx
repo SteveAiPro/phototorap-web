@@ -128,6 +128,11 @@ export default function Navbar() {
                     <Link href="/pricing" onClick={() => setUserDropdownOpen(false)} className="block px-2 py-1.5 rounded-lg text-gray-300 hover:bg-[#181B26] hover:text-[#FF6A00]">
                       Top Up Credits
                     </Link>
+                    {user.email?.includes('gaoqian') && (
+                      <Link href="/admin" onClick={() => setUserDropdownOpen(false)} className="block px-2 py-1.5 rounded-lg text-[#FF6A00] hover:bg-[#181B26] font-bold">
+                        ⚙️ Admin Console
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         logout();
