@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getStripe, PAYMENT_PLANS } from '@/lib/stripe';
-import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { getWaffoClient, PAYMENT_PLANS } from '@/lib/waffo';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://phototorap.com';
 
@@ -17,56 +16,44 @@ export async function POST(req: Request) {
       );
     }
 
-    const stripe = getStripe();
+    const waffo = getWaffoClient();
 
-    // 如果未配置 Stripe Key 或处于预览模式，返回模拟成功链接
-    if (!stripe) {
+    // 如果未配置 Waffo 私钥，返回模拟成功链接
+    if (!waffo) {
       return NextResponse.json({
         success: true,
         mode: 'simulation',
-        checkoutUrl: `/pricing/success?plan=${planId}&credits=${plan.credits}`,
+        checkoutUrl: `/pricing?payment=simulation&plan=${planId}&credits=${plan.credits}`,
         planName: plan.name,
         creditsAdded: plan.credits,
       });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: plan.name,
-              description: plan.description,
-              images: [`${SITE_URL}/og-image.png`],
-            },
-            unit_amount: plan.priceCents,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      client_reference_id: userId || undefined,
-      customer_email: email || undefined,
+    // 创建 Waffo Pancake 托管收银台会话
+    const session = await waffo.checkout.createSession({
+      productId: plan.productId,
+      currency: 'USD',
+      buyerEmail: email || undefined,
+      successUrl: `${SITE_URL}/pricing?payment=success&credits=${plan.credits}`,
       metadata: {
         userId: userId || '',
         planId: plan.id,
         credits: String(plan.credits),
       },
-      success_url: `${SITE_URL}/pricing?payment=success&session_id={CHECKOUT_SESSION_ID}&credits=${plan.credits}`,
-      cancel_url: `${SITE_URL}/pricing?payment=cancelled`,
+      expiresInSeconds: 3600,
+      darkMode: true,
     });
 
     return NextResponse.json({
       success: true,
-      url: session.url,
-      checkoutUrl: session.url,
-      sessionId: session.id,
+      url: session.checkoutUrl,
+      checkoutUrl: session.checkoutUrl,
+      sessionId: session.sessionId,
     });
   } catch (err: any) {
-    console.error('[api/checkout] Error creating checkout session:', err);
+    console.error('[api/checkout] Error creating Waffo checkout session:', err);
     return NextResponse.json(
-      { error: err?.message || 'Internal server error' },
+      { error: err?.message || 'Failed to initialize payment session' },
       { status: 500 }
     );
   }

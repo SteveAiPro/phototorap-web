@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
+    "@waffo/pancake-ts": "^0.25.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.446.0",
     "marked": "^18.0.14",

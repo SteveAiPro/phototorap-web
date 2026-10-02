@@ -25,11 +25,12 @@ export default function PricingPage() {
         body: JSON.stringify({ planId, email: user.email, userId: user.id }),
       });
       const data = await res.json();
-      if (data.url) {
-        // Real Stripe Checkout redirect
-        window.location.href = data.url;
+      const checkoutUrl = data.checkoutUrl || data.url;
+      if (checkoutUrl && !checkoutUrl.startsWith('/pricing?payment=simulation')) {
+        // Waffo 官方集成关键规则：新标签页打开收银台，保留主站上下文
+        window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
       } else if (data.success && data.mode === 'simulation') {
-        // Simulated instant refill when Stripe keys not configured
+        // 模拟模式直接充值
         addCredits(credits);
         alert(`🎉 Payment Successful! ${credits} Credits added to your account.`);
       } else if (data.error) {

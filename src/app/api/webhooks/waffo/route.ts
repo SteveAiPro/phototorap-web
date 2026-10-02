@@ -1,0 +1,70 @@
+import { NextResponse } from 'next/server';
+import { verifyWebhook, WebhookEventType } from '@waffo/pancake-ts';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { addCredits } from '@/lib/credits';
+
+export async function POST(req: Request) {
+  try {
+    // 关键规则：必须读取 raw text，JSON 解析会破坏 RSA-SHA256 签名校验
+    const rawBody = await req.text();
+    const signature = req.headers.get('x-waffo-signature') || req.headers.get('X-Waffo-Signature');
+
+    if (!signature) {
+      console.warn('[webhooks/waffo] Missing x-waffo-signature header');
+      return NextResponse.json({ error: 'Missing signature header' }, { status: 400 });
+    }
+
+    let event: any;
+    try {
+      event = verifyWebhook(rawBody, signature);
+    } catch (err: any) {
+      console.error('[webhooks/waffo] Signature verification failed:', err?.message);
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    // 幂等性去重：使用 event.id
+    const deliveryId = event.id || event.eventId;
+    const admin = getSupabaseAdmin();
+
+    if (admin && deliveryId) {
+      const { data: existingTx } = await admin
+        .from('credit_transactions')
+        .select('id')
+        .eq('ref_id', deliveryId)
+        .maybeSingle();
+
+      if (existingTx) {
+        console.log(`[webhooks/waffo] Delivery ${deliveryId} already processed, skipping.`);
+        return new Response('OK', { status: 200 });
+      }
+    }
+
+    // 处理订单完成或订阅开通
+    if (
+      event.eventType === WebhookEventType.OrderCompleted ||
+      event.eventType === 'order.completed' ||
+      event.eventType === WebhookEventType.SubscriptionActivated ||
+      event.eventType === 'subscription.activated'
+    ) {
+      const metadata = event.metadata || event.data?.metadata || {};
+      const userId = metadata.userId || event.data?.userId;
+      const credits = Number(metadata.credits || 10);
+
+      if (userId && credits > 0) {
+        console.log(`[webhooks/waffo] Fulfilling ${credits} credits to user ${userId}`);
+        await addCredits(
+          userId,
+          credits,
+          'purchase',
+          deliveryId,
+          `Purchased ${event.data?.productName || 'Waffo Credit Plan'} (${event.data?.orderId || deliveryId})`
+        );
+      }
+    }
+
+    return new Response('OK', { status: 200 });
+  } catch (err: any) {
+    console.error('[webhooks/waffo] Webhook error:', err);
+    return NextResponse.json({ error: 'Webhook processing error' }, { status: 500 });
+  }
+}
