@@ -49,9 +49,19 @@ export async function runSeedanceVideoGeneration(
       ? (process.env.REPLICATE_SEEDANCE_PRO_MODEL || 'bytedance/seedance-2.0')
       : (process.env.REPLICATE_SEEDANCE_MODEL || 'bytedance/seedance-2.0-mini');
 
-  const promptText = params.topic
-    ? `Two charismatic rap artists performing "${params.topic}" inside a vibrant neon COLORS studio stage, photorealistic, lip-synced trap flow, rhythmic head nodding and hand gestures, cinematic, dynamic camera tracking, high energy hip hop beat`
-    : `Two friends rapping energetically in a signature neon COLORS studio booth, lip-synced trap performance, rhythmic flow, dynamic lighting, cinematic hip hop music video with synchronized beat`;
+  // 根据舞台背景设计专属场景与光影
+  const stagePromptMap: Record<string, string> = {
+    'hotel-lobby': 'in an iconic warm orange monochrome COLORS studio hotel lobby booth, bold minimalist set, rich warm lighting',
+    'luxury-lobby': 'in a luxury penthouse elevator lobby with polished marble, warm golden backlights, neon elevator indicators',
+    'studio-booth': 'in a professional music recording studio booth with soundproof foam panels, vintage microphones, neon magenta rim light',
+    'street-cypher': 'in an urban neon alley street cypher, rainy asphalt reflections, vibrant blue and amber streetlights',
+  };
+
+  const stageDesc = stagePromptMap[params.stage] || stagePromptMap['hotel-lobby'];
+  const userTopic = params.topic || 'viral hit rap';
+
+  // Seedance 2.0 官方最佳实践：双引号内指定说唱台词，结合镜头语言与节奏动作
+  const promptText = `Two energetic rap stars performing dynamically ${stageDesc}. Rhythmic head bobbing, hand gestures pointing to the camera, confident swagger and expressive lip-synced flow. They rap: "${userTopic}! Out here dropping heat in the booth, living the dream and setting the trend!" Cinematic 1080p, dynamic camera push-in and subtle whip pans, punchy 808 trap beat and rhythmic synth bass, professional music video grade.`;
 
   // 解析时长（秒）：默认 5 或 10 秒，最大 15 秒，-1 为智能自适应时长
   const durationSec = params.duration === '15s' ? 10 : 5;
