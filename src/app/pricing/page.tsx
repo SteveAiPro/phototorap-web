@@ -17,7 +17,7 @@ export default function PricingPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment') === 'success') {
       const creditsToAdd = Number(params.get('credits') || 10);
-      addCredits(creditsToAdd);
+      addCredits(creditsToAdd, `Waffo Package Top-Up (+${creditsToAdd} Credits)`, 'purchase');
       alert(`🎉 Payment Successful! ${creditsToAdd} Credits added to your account.`);
       // 清除 URL 查询参数避免重复触发
       window.history.replaceState({}, '', '/pricing');

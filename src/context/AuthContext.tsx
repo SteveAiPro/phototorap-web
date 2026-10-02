@@ -18,7 +18,7 @@ interface AuthContextType {
   loginWithEmail: (email: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   deductCredits: (amount: number) => boolean;
-  addCredits: (amount: number) => void;
+  addCredits: (amount: number, description?: string, type?: string) => void;
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const addCredits = (amount: number) => {
+  const addCredits = (amount: number, description: string = 'Waffo Credit Top Up', type: string = 'purchase') => {
     if (!user) return;
     const updated = { ...user, credits: user.credits + amount };
     setUser(updated);
@@ -200,10 +200,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const supabase = createClient();
     if (supabase && user.id && !user.id.startsWith('usr_')) {
+      // 1. 更新用户余额
       supabase
         .from('users')
-        .update({ credits: updated.credits })
+        .update({ credits: updated.credits, updated_at: new Date().toISOString() })
         .eq('id', user.id)
+        .then();
+
+      // 2. 写入积分交易明细流水表 (credit_transactions)
+      supabase
+        .from('credit_transactions')
+        .insert({
+          user_id: user.id,
+          amount,
+          type,
+          description,
+          ref_id: 'topup_' + Date.now(),
+        })
         .then();
     }
   };
