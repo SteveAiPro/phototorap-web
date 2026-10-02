@@ -32,8 +32,8 @@ export interface GenerateVideoParams {
 
 /**
  * 调度 ByteDance Seedance 系列（Replicate 官方托管模型）：
+ * - bytedance/seedance-2.0-mini (官方 Mini 轻量版：超高性价比、快速生成，支持文字/图片/视频/音频多模态、原生音画同步)
  * - bytedance/seedance-2.0 (标准版，旗舰多模态对口型/音乐视频生成，支持 1080p、原生音乐与人声动作联动)
- * - bytedance/seedance-2.0-fast (即 mini/fast 极速轻量版，秒级渲染，高性价比)
  */
 export async function runSeedanceVideoGeneration(
   params: GenerateVideoParams
@@ -43,20 +43,26 @@ export async function runSeedanceVideoGeneration(
     throw new Error('Replicate API token is not configured');
   }
 
-  // 对应模型路由：fast 对应 2.0-fast，其余默认使用 2.0
+  // 默认使用 bytedance/seedance-2.0-mini，高级/旗舰 tier 可无缝路由到 seedance-2.0
   const modelId =
-    params.modelTier === 'fast'
-      ? 'bytedance/seedance-2.0-fast'
-      : (process.env.REPLICATE_SEEDANCE_MODEL || 'bytedance/seedance-2.0');
+    params.modelTier === 'pro' || params.modelTier === 'flagship'
+      ? (process.env.REPLICATE_SEEDANCE_PRO_MODEL || 'bytedance/seedance-2.0')
+      : (process.env.REPLICATE_SEEDANCE_MODEL || 'bytedance/seedance-2.0-mini');
 
   const promptText = params.topic
-    ? `Two charismatic rap artists performing ${params.topic} inside a vibrant neon COLORS studio stage, photorealistic, lip-synced trap flow, rhythmic head nodding and hand gestures, cinematic 1080p, dynamic camera tracking`
-    : `Two friends rapping energetically in a signature neon COLORS studio booth, lip-synced trap performance, dynamic lighting, cinematic hip hop music video, 1080p`;
+    ? `Two charismatic rap artists performing "${params.topic}" inside a vibrant neon COLORS studio stage, photorealistic, lip-synced trap flow, rhythmic head nodding and hand gestures, cinematic, dynamic camera tracking, high energy hip hop beat`
+    : `Two friends rapping energetically in a signature neon COLORS studio booth, lip-synced trap performance, rhythmic flow, dynamic lighting, cinematic hip hop music video with synchronized beat`;
+
+  // 解析时长（秒）：默认 5 或 10 秒，最大 15 秒，-1 为智能自适应时长
+  const durationSec = params.duration === '15s' ? 10 : 5;
 
   const input: Record<string, any> = {
-    image: params.photo1Url,
     prompt: promptText,
+    image: params.photo1Url,
     aspect_ratio: params.aspectRatio || '9:16',
+    duration: durationSec,
+    resolution: params.modelTier === 'pro' ? '720p' : '720p',
+    generate_audio: true,
   };
 
   try {
