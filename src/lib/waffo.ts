@@ -78,3 +78,45 @@ export function getWaffoClient(): WaffoPancake | null {
 export function isWaffoConfigured(): boolean {
   return Boolean(process.env.WAFFO_PRIVATE_KEY && process.env.WAFFO_MERCHANT_ID);
 }
+
+/**
+ * 前置内容安全合规扫描 (Waffo Prompt Screening API)
+ * 在 AI 视频/提示词实际进入生成环节前进行违规过滤
+ */
+export async function checkPromptSafety(prompt: string): Promise<{
+  safe: boolean;
+  action: 'allow' | 'review' | 'block';
+  reason?: string;
+}> {
+  if (!prompt || !prompt.trim()) {
+    return { safe: true, action: 'allow' };
+  }
+
+  const client = getWaffoClient();
+  if (!client) {
+    return { safe: true, action: 'allow' };
+  }
+
+  try {
+    const res = await client.contentSafety.scanPrompt({
+      prompt: prompt.trim().slice(0, 2000),
+    });
+
+    if (res.action === 'block') {
+      return {
+        safe: false,
+        action: 'block',
+        reason: 'Prompt contains restricted content not permitted by our content safety guidelines.',
+      };
+    }
+
+    return {
+      safe: true,
+      action: res.action,
+    };
+  } catch (err: any) {
+    console.warn('[Waffo ContentSafety] Scan prompt error or service unavailable, allowing through:', err?.message);
+    return { safe: true, action: 'allow' };
+  }
+}
+

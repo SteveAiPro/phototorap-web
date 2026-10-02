@@ -60,6 +60,36 @@ export default function Footer() {
               <li><Link href="/ethics" className="hover:text-white">AI Ethics & Consent</Link></li>
             </ul>
           </div>
+
+          {/* Col 5 - Customer Support (Waffo Compliance Mandate) */}
+          <div>
+            <h4 className="font-bold text-white uppercase tracking-wider mb-3">Customer Support</h4>
+            <ul className="space-y-2.5">
+              <li>
+                <span className="text-gray-400 block text-[11px] mb-0.5">Need help or billing inquiries?</span>
+                <a
+                  href="mailto:support@phototorap.com"
+                  className="text-[#FF6A00] hover:underline font-medium break-all flex items-center gap-1.5"
+                >
+                  support@phototorap.com
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:gaoqian2580@gmail.com"
+                  className="text-gray-400 hover:text-white text-[11px] transition-colors"
+                >
+                  Alt: gaoqian2580@gmail.com
+                </a>
+              </li>
+              <li className="pt-1">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-[10px]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Response within 24h
+                </span>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div className="border-t border-[#181B26] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-gray-500">

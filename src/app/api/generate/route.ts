@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { deductCredits } from '@/lib/credits';
 import { isReplicateConfigured, runSeedanceVideoGeneration } from '@/lib/replicate';
+import { checkPromptSafety } from '@/lib/waffo';
 
 export async function POST(req: Request) {
   try {
@@ -10,6 +11,17 @@ export async function POST(req: Request) {
 
     if (!photo1) {
       return NextResponse.json({ error: 'At least one photo is required.' }, { status: 400 });
+    }
+
+    // Waffo 提示词内容安全合规前置审核 (Prompt Screening API)
+    if (topic && typeof topic === 'string') {
+      const safetyResult = await checkPromptSafety(topic);
+      if (!safetyResult.safe) {
+        return NextResponse.json(
+          { error: 'Prompt contains restricted content. Please revise your topic or lyrics description.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Map stages to verified high-fidelity rap video renders
