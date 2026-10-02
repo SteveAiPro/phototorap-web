@@ -2,6 +2,13 @@ node_modules
 .next
 out
 .env*.local
+.env
+.env.local
+.env.production
+.env.development
+*.pem
+*.key
 .DS_Store
 *.log
 waffo_private.pem
+
