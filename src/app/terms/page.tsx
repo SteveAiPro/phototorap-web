@@ -26,21 +26,22 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-2">2. Acceptable Use & Consent</h2>
+            <h2 className="text-xl font-bold text-white mb-2">2. Acceptable Use & Content Standards</h2>
             <p>
-              You represent and warrant that you own or have obtained all necessary rights and consent from any individual depicted in photos uploaded to PhotoToRap AI. You agree not to upload:
+              You represent and warrant that you own or have obtained all necessary rights, licenses, and express consent from any individual depicted in photos uploaded to PhotoToRap AI. You strictly agree not to upload, input, or generate:
             </p>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li>Images of minors without legal parental/guardian authorization;</li>
-              <li>Defamatory, obscene, harassing, or sexually explicit content;</li>
-              <li>Unauthorized likeness of public figures or third parties for malicious deepfakes or impersonation.</li>
+            <ul className="list-disc pl-5 space-y-1.5 mt-2">
+              <li>Images or likeness of minors without verified parental or legal guardian authorization;</li>
+              <li>Defamatory, obscene, harassing, violent, or sexually explicit content;</li>
+              <li>Unauthorized likeness of public figures or third parties for malicious deepfakes or impersonation;</li>
+              <li><strong>Infringing Material:</strong> Any content or prompts that infringe upon or violate third-party copyright, trademark, trade secret, or other intellectual property rights.</li>
             </ul>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-white mb-2">3. Credits & Purchases</h2>
             <p>
-              Generation renders consume virtual Credits. All purchases of credit packs are billed through secure payment partners (Stripe). Credits are non-transferable and subject to our Refund Policy.
+              Generation renders consume virtual Credits. All purchases of credit packages and subscriptions are billed through our authorized global payment processing partners (including Waffo Pancake). Credits are non-transferable and subject to our Refund Policy.
             </p>
           </section>
 

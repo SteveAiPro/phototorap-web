@@ -495,6 +495,12 @@ export default function GeneratorCard() {
         <p className="mt-2 text-xs text-gray-400">
           {t.generator.step4Footer}
         </p>
+
+        {/* AI 内容安全合规提示与前置扫描保障 */}
+        <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-gray-400">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+          <span>Protected by automated content moderation & prompt safety screening (AUP & Copyright compliant).</span>
+        </div>
       </div>
 
       {/* 橙色大号 CTA 生成按钮 */}

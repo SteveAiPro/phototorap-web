@@ -33,14 +33,16 @@ export default function EthicsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-2">3. Content Safety Filters</h2>
+            <h2 className="text-xl font-bold text-white mb-2">3. Content Safety Filters & Acceptable Use</h2>
             <p>
-              We implement multi-stage automated moderation filters:
+              We implement multi-stage automated moderation filters and strictly prohibit the following content categories:
             </p>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li>Rejection of NSFW, sexually suggestive, or violent imagery;</li>
+            <ul className="list-disc pl-5 space-y-1.5 mt-2">
+              <li>Rejection of NSFW, sexually explicit, or violent imagery;</li>
               <li>Filter blocks on hate speech, racial slurs, and defamatory lyric inputs;</li>
-              <li>Protection of minors: uploads identified as containing minors without explicit legal authority will be automatically blocked.</li>
+              <li>Protection of minors: uploads identified as containing minors without explicit legal authority are strictly blocked;</li>
+              <li>Unauthorized deepfakes, non-consensual likeness, or impersonation of real individuals;</li>
+              <li><strong className="text-white">Third-Party Intellectual Property:</strong> Users may not upload, prompt, or generate content that infringes any third-party copyright, trademark, trade dress, or proprietary rights.</li>
             </ul>
           </section>
 
