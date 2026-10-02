@@ -1,0 +1,126 @@
+import Replicate from 'replicate';
+
+let _replicate: Replicate | null = null;
+
+export function getReplicate(): Replicate | null {
+  const token = process.env.REPLICATE_API_TOKEN;
+  if (!token || token.includes('YOUR-REPLICATE-TOKEN')) {
+    return null;
+  }
+  if (!_replicate) {
+    _replicate = new Replicate({
+      auth: token,
+    });
+  }
+  return _replicate;
+}
+
+export function isReplicateConfigured(): boolean {
+  const token = process.env.REPLICATE_API_TOKEN;
+  return Boolean(token && !token.includes('YOUR-REPLICATE-TOKEN'));
+}
+
+export interface GenerateVideoParams {
+  photo1Url: string;
+  photo2Url?: string;
+  stage: string;
+  topic?: string;
+  duration?: string;
+  aspectRatio?: string;
+  modelTier?: 'standard' | 'fast' | 'pro' | 'flagship';
+}
+
+/**
+ * 调度 ByteDance Seedance 系列（Replicate 官方托管模型）：
+ * - bytedance/seedance-2.0 (标准版，旗舰多模态对口型/音乐视频生成，支持 1080p、原生音乐与人声动作联动)
+ * - bytedance/seedance-2.0-fast (即 mini/fast 极速轻量版，秒级渲染，高性价比)
+ */
+export async function runSeedanceVideoGeneration(
+  params: GenerateVideoParams
+): Promise<{ videoUrl: string; id: string }> {
+  const client = getReplicate();
+  if (!client) {
+    throw new Error('Replicate API token is not configured');
+  }
+
+  // 对应模型路由：fast 对应 2.0-fast，其余默认使用 2.0
+  const modelId =
+    params.modelTier === 'fast'
+      ? 'bytedance/seedance-2.0-fast'
+      : (process.env.REPLICATE_SEEDANCE_MODEL || 'bytedance/seedance-2.0');
+
+  const promptText = params.topic
+    ? `Two charismatic rap artists performing ${params.topic} inside a vibrant neon COLORS studio stage, photorealistic, lip-synced trap flow, rhythmic head nodding and hand gestures, cinematic 1080p, dynamic camera tracking`
+    : `Two friends rapping energetically in a signature neon COLORS studio booth, lip-synced trap performance, dynamic lighting, cinematic hip hop music video, 1080p`;
+
+  const input: Record<string, any> = {
+    image: params.photo1Url,
+    prompt: promptText,
+    aspect_ratio: params.aspectRatio || '9:16',
+  };
+
+  try {
+    const output: any = await client.run(modelId as any, { input });
+    
+    // Replicate 的输出可能为输出视频 URL 字符串、URL 数组或包含 url() 的对象
+    let videoUrl = '';
+    if (typeof output === 'string') {
+      videoUrl = output;
+    } else if (Array.isArray(output) && output.length > 0) {
+      videoUrl = typeof output[0] === 'string' ? output[0] : output[0]?.url?.() || String(output[0]);
+    } else if (output && typeof output === 'object') {
+      videoUrl = output.url ? (typeof output.url === 'function' ? output.url() : output.url) : '';
+    }
+
+    return {
+      id: 'rep_' + Math.random().toString(36).substring(7),
+      videoUrl,
+    };
+  } catch (error: any) {
+    console.error('[runSeedanceVideoGeneration] Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * 兼容旧版 LivePortrait / 通用模型调用
+ */
+export async function runReplicateVideoGeneration(
+  params: GenerateVideoParams
+): Promise<{ videoUrl: string; id: string }> {
+  const client = getReplicate();
+  if (!client) {
+    throw new Error('Replicate API token is not configured');
+  }
+
+  const modelIdentifier =
+    process.env.REPLICATE_MODEL ||
+    'fofr/live-portrait:9b3b0d463b712b323145d02fa74a4f89d5a7d770c0c6ca78028f80cb528247ea';
+
+  const input: Record<string, any> = {
+    source_image: params.photo1Url,
+    driving_video:
+      params.stage === 'luxury-lobby'
+        ? 'https://phototorap.com/examples/neon-elevator.mp4'
+        : params.stage === 'studio-booth'
+        ? 'https://phototorap.com/examples/grandpas.mp4'
+        : params.stage === 'street-cypher'
+        ? 'https://phototorap.com/examples/orange-street.mp4'
+        : 'https://phototorap.com/examples/friends.mp4',
+  };
+
+  if (params.photo2Url) {
+    input.driving_multiplier = 1.0;
+  }
+
+  const prediction = await client.predictions.create({
+    version: modelIdentifier.includes(':') ? modelIdentifier.split(':')[1] : undefined,
+    model: !modelIdentifier.includes(':') ? (modelIdentifier as any) : undefined,
+    input,
+  });
+
+  return {
+    id: prediction.id,
+    videoUrl: typeof prediction.output === 'string' ? prediction.output : '',
+  };
+}

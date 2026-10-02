@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { deductCredits } from '@/lib/credits';
+import { isReplicateConfigured, runSeedanceVideoGeneration } from '@/lib/replicate';
 
 export async function POST(req: Request) {
   try {
@@ -30,8 +31,29 @@ export async function POST(req: Request) {
     const is15s = body.duration === '15s';
     const creditsDeducted = is15s ? Math.round(baseCredits * 1.3) : baseCredits;
 
-    const videoUrl = stageVideoMap[stage] || '/examples/friends.mp4';
-    const taskId = 'task_' + Math.random().toString(36).substring(7);
+    let videoUrl = stageVideoMap[stage] || '/examples/friends.mp4';
+    let taskId = 'task_' + Math.random().toString(36).substring(7);
+
+    // 如果已配置 REPLICATE_API_TOKEN，则尝试接入真实的 ByteDance Seedance 2.0 (或 2.0-fast)
+    if (isReplicateConfigured()) {
+      try {
+        const repRes = await runSeedanceVideoGeneration({
+          photo1Url: photo1,
+          photo2Url: photo2,
+          stage,
+          topic,
+          duration: body.duration || '12s',
+          aspectRatio: body.aspectRatio || '9:16',
+          modelTier: body.model || 'standard',
+        });
+        if (repRes.videoUrl) {
+          videoUrl = repRes.videoUrl;
+        }
+        taskId = repRes.id;
+      } catch (repErr) {
+        console.warn('[api/generate] Replicate Seedance call warning, using fallback render:', repErr);
+      }
+    }
 
     // 如果提供了真实用户 ID，执行原子扣积分和写入任务记录
     const admin = getSupabaseAdmin();
