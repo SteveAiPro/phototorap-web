@@ -54,6 +54,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: '39LvT32JAXqHe6XN0UfzabaOvk5DgT6L2MJXTsZfwWs',
+    other: {
+      'waffo-verify': '97cd1b4f3e87735c2dc04992075224e5',
+    },
   },
 };
 
