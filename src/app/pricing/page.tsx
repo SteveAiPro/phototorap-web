@@ -9,6 +9,8 @@ import { Check, Sparkles, Zap, ShieldCheck } from 'lucide-react';
 
 export default function PricingPage() {
   const { user, addCredits, openAuthModal } = useAuth();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
   // 监听从 Waffo / Stripe 返回的支付成功重定向 (?payment=success&credits=10)
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
