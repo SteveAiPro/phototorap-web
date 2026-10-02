@@ -9,7 +9,18 @@ import { Check, Sparkles, Zap, ShieldCheck } from 'lucide-react';
 
 export default function PricingPage() {
   const { user, addCredits, openAuthModal } = useAuth();
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  // 监听从 Waffo / Stripe 返回的支付成功重定向 (?payment=success&credits=10)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+      const creditsToAdd = Number(params.get('credits') || 10);
+      addCredits(creditsToAdd);
+      alert(`🎉 Payment Successful! ${creditsToAdd} Credits added to your account.`);
+      // 清除 URL 查询参数避免重复触发
+      window.history.replaceState({}, '', '/pricing');
+    }
+  }, [addCredits]);
 
   const handleCheckout = async (planId: string, credits: number) => {
     if (!user) {

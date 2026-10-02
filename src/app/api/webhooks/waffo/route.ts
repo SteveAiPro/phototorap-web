@@ -46,9 +46,28 @@ export async function POST(req: Request) {
       event.eventType === WebhookEventType.SubscriptionActivated ||
       event.eventType === 'subscription.activated'
     ) {
-      const metadata = event.metadata || event.data?.metadata || {};
-      const userId = metadata.userId || event.data?.userId;
+      // 官方 Pancake Webhook 事件中，元数据存放在 event.data.orderMetadata
+      const metadata =
+        event.data?.orderMetadata ||
+        event.data?.metadata ||
+        event.metadata ||
+        {};
+
+      let userId = metadata.userId || event.data?.userId;
       const credits = Number(metadata.credits || 10);
+      const buyerEmail = event.data?.buyerEmail;
+
+      // 如果未携带 userId，尝试通过买家邮箱在数据库中查找对应用户
+      if (!userId && buyerEmail && admin) {
+        const { data: foundUser } = await admin
+          .from('users')
+          .select('id')
+          .eq('email', buyerEmail)
+          .maybeSingle();
+        if (foundUser) {
+          userId = foundUser.id;
+        }
+      }
 
       if (userId && credits > 0) {
         console.log(`[webhooks/waffo] Fulfilling ${credits} credits to user ${userId}`);
@@ -59,6 +78,8 @@ export async function POST(req: Request) {
           deliveryId,
           `Purchased ${event.data?.productName || 'Waffo Credit Plan'} (${event.data?.orderId || deliveryId})`
         );
+      } else {
+        console.warn(`[webhooks/waffo] Warning: Order completed but could not match user! userId: ${userId}, email: ${buyerEmail}`);
       }
     }
 
