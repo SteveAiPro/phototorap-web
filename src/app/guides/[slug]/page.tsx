@@ -15,9 +15,32 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const guide = GUIDES.find((g) => g.slug === params.slug);
   if (!guide) return {};
+  const pngImage = `https://phototorap.com/guides/${guide.slug}.png`;
   return {
     title: `${guide.title} | PhotoToRap AI Guides`,
     description: guide.description,
+    openGraph: {
+      title: guide.title,
+      description: guide.description,
+      url: `https://phototorap.com/guides/${guide.slug}`,
+      siteName: 'PhotoToRap AI',
+      images: [
+        {
+          url: pngImage,
+          width: 1200,
+          height: 630,
+          alt: guide.title,
+        },
+      ],
+      type: 'article',
+      publishedTime: guide.publishedAt,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: guide.title,
+      description: guide.description,
+      images: [pngImage],
+    },
   };
 }
 
@@ -59,33 +82,41 @@ export default function GuidePost({ params }: { params: { slug: string } }) {
           </div>
         </header>
 
-        {/* Featured Image */}
-        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-black mb-10 border border-[#222533]">
-          <img src={guide.coverImage} alt={guide.title} className="h-full w-full object-cover" />
-        </div>
-
-        {/* Inline High-Converting Tool Card */}
-        <div className="mb-10 rounded-2xl border border-[#FF6A00]/40 bg-gradient-to-r from-[#181B26] to-[#12141C] p-6 text-center shadow-lg">
-          <h3 className="font-display text-lg font-bold text-white mb-2">
-            Try the Viral AI Rap Duo Generator Now
-          </h3>
-          <p className="text-xs text-gray-400 max-w-md mx-auto mb-4">
-            Upload two selfies of you and a friend to get your 12-second Hotel Lobby rap video in 3 minutes.
-          </p>
-          <Link
-            href="/#generator"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#FF6A00] px-6 py-2.5 text-xs font-black text-black shadow-lg hover:bg-[#FF7D1A] transition-transform hover:scale-105"
-          >
-            <Mic className="h-4 w-4" />
-            <span>Make Your Rap Video Free</span>
-          </Link>
-        </div>
-
         {/* Post Content */}
         <article
           className="prose prose-invert max-w-none text-gray-300 leading-relaxed text-sm sm:text-base border-b border-[#222533] pb-12 [&>h2]:text-2xl [&>h2]:font-bold [&>h2]:text-white [&>h2]:mt-10 [&>h2]:mb-4 [&>h3]:text-lg [&>h3]:font-bold [&>h3]:text-white [&>h3]:mt-6 [&>h3]:mb-2 [&>p]:mb-5 [&>p]:leading-relaxed [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-5 [&>ul]:space-y-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-5 [&>ol]:space-y-2 [&>blockquote]:border-l-4 [&>blockquote]:border-[#FF6A00] [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:my-6 [&>blockquote]:text-gray-300 [&>table]:w-full [&>table]:my-6 [&>table]:border-collapse [&_th]:border [&_th]:border-[#222533] [&_th]:bg-[#12141C] [&_th]:p-3 [&_th]:text-left [&_th]:text-white [&_td]:border [&_td]:border-[#222533] [&_td]:p-3 [&_a]:text-[#FF6A00] [&_a]:underline [&_a:hover]:text-[#FF7D1A]"
-          dangerouslySetInnerHTML={{ __html: marked.parse(guide.content) }}
-        />
+        >
+          {/* Featured Image inside article for Medium and feed parsers */}
+          <figure className="mb-10 overflow-hidden rounded-2xl border border-[#222533]">
+            <img
+              src={`https://phototorap.com/guides/${guide.slug}.png`}
+              alt={guide.title}
+              className="w-full aspect-[16/9] object-cover"
+            />
+            <figcaption className="text-center text-xs text-gray-400 mt-2">
+              {guide.title} — PhotoToRap AI
+            </figcaption>
+          </figure>
+
+          {/* Inline High-Converting Tool Card */}
+          <div className="not-prose mb-10 rounded-2xl border border-[#FF6A00]/40 bg-gradient-to-r from-[#181B26] to-[#12141C] p-6 text-center shadow-lg">
+            <h3 className="font-display text-lg font-bold text-white mb-2">
+              Try the Viral AI Rap Duo Generator Now
+            </h3>
+            <p className="text-xs text-gray-400 max-w-md mx-auto mb-4">
+              Upload two selfies of you and a friend to get your 12-second Hotel Lobby rap video in 3 minutes.
+            </p>
+            <Link
+              href="/#generator"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#FF6A00] px-6 py-2.5 text-xs font-black text-black shadow-lg hover:bg-[#FF7D1A] transition-transform hover:scale-105"
+            >
+              <Mic className="h-4 w-4" />
+              <span>Make Your Rap Video Free</span>
+            </Link>
+          </div>
+
+          <div dangerouslySetInnerHTML={{ __html: marked.parse(guide.content) }} />
+        </article>
 
         {/* In-content Advertisement Container */}
         <AdsterraNativeBanner />
