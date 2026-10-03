@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { ImagePlus, Check, ChevronDown, Coins, Mic, Sparkles, X } from 'lucide-react';
+import { ImagePlus, Check, ChevronDown, Coins, Mic, Sparkles, X, Disc, Loader2, Music, Radio } from 'lucide-react';
 import { trackGenerateClick, trackPreviewReady } from '@/lib/analytics';
 
 interface Stage {
@@ -95,12 +95,33 @@ export default function GeneratorCard() {
   const [selectedOccasion, setSelectedOccasion] = useState('birthday');
   const [topicInput, setTopicInput] = useState('');
 
-  // Generation state
+  // Generation state & Progress Modal
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generateElapsed, setGenerateElapsed] = useState(0);
+  const [generateStepIndex, setGenerateStepIndex] = useState(0);
   const [generatedResult, setGeneratedResult] = useState<{
     videoUrl: string;
     lyrics: string;
   } | null>(null);
+
+  // 渲染中步骤提示轮播与计时器
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isGenerating) {
+      setGenerateElapsed(0);
+      setGenerateStepIndex(0);
+      interval = setInterval(() => {
+        setGenerateElapsed((prev) => {
+          const next = prev + 1;
+          if (next % 6 === 0) {
+            setGenerateStepIndex((s) => (s + 1) % 5);
+          }
+          return next;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
   const currentModelObj = MODELS.find((m) => m.id === selectedModel) || MODELS[0];
   
@@ -607,6 +628,67 @@ export default function GeneratorCard() {
       <p className="mt-3 text-center text-xs text-gray-400">
         {t.generator.guaranteeText}
       </p>
+
+      {/* 沉浸式 AI 渲染全屏等待弹窗 (带动态进度、旋转光环、动效声波与步骤轮播) */}
+      {isGenerating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="relative w-full max-w-sm rounded-3xl border border-[#FF6A00]/40 bg-[#12141C] p-6 text-center shadow-2xl">
+            {/* 顶栏状态徽章 */}
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#FF6A00]/15 px-3 py-1 text-xs font-bold text-[#FF6A00] mb-4">
+              <span className="h-2 w-2 rounded-full bg-[#FF6A00] animate-ping"></span>
+              <span>AI GPU Generating Video</span>
+            </div>
+
+            {/* 视觉动效中心：发光黑胶唱片与旋转声波 */}
+            <div className="relative my-4 flex items-center justify-center">
+              <div className="absolute h-28 w-28 rounded-full bg-[#FF6A00]/20 blur-xl animate-pulse"></div>
+              <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-[#FF6A00]/40 bg-[#0A0C13] shadow-inner shadow-black">
+                <Disc className="h-12 w-12 text-[#FF6A00] animate-[spin_4s_linear_infinite]" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Music className="h-5 w-5 text-white animate-bounce" />
+                </div>
+              </div>
+            </div>
+
+            {/* 标题与计时 */}
+            <h3 className="font-display text-lg font-bold text-white mb-1">
+              Rendering Your Rap Video
+            </h3>
+            <p className="text-xs text-gray-400 mb-4">
+              ByteDance Seedance 2.0 Mini • Elapsed <span className="font-mono font-semibold text-white">{generateElapsed}s</span>
+            </p>
+
+            {/* 动态进度条 */}
+            <div className="w-full bg-[#0A0C13] rounded-full h-2 mb-3 overflow-hidden border border-[#222533]">
+              <div
+                className="bg-gradient-to-r from-[#FF6A00] via-[#FF8A00] to-[#FFA01A] h-2 rounded-full transition-all duration-500 ease-out"
+                style={{
+                  width: `${Math.min(95, Math.max(12, Math.round(generateElapsed * 1.3)))}%`,
+                }}
+              ></div>
+            </div>
+
+            {/* 步骤提示轮播 */}
+            <div className="min-h-[40px] flex items-center justify-center">
+              <p className="text-xs font-medium text-amber-200/90 animate-pulse transition-all">
+                {[
+                  '✨ Analyzing photo facial landmarks & angles...',
+                  '🔥 Writing custom rhyming rap lyrics & 142 BPM beat...',
+                  '🎤 Synthesizing flow & lip-synced facial animation...',
+                  '🎬 Rendering dynamic camera motions & stage lighting...',
+                  '⚡ Finalizing 720p music video master track...',
+                ][generateStepIndex]}
+              </p>
+            </div>
+
+            {/* 底部贴心防跳出提示 */}
+            <div className="mt-4 pt-3 border-t border-[#222533]/60 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
+              <Radio className="h-3 w-3 text-[#FF6A00] animate-pulse" />
+              <span>Please keep this window open while rendering</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 结果播放弹窗 */}
       {generatedResult && (
