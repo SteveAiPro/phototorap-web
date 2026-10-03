@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { ImagePlus, Check, ChevronDown, Coins, Mic, Sparkles, X } from 'lucide-react';
+import { trackGenerateClick, trackPreviewReady } from '@/lib/analytics';
 
 interface Stage {
   id: string;
@@ -114,6 +115,12 @@ export default function GeneratorCard() {
       return;
     }
 
+    trackGenerateClick({
+      mode: photoMode === 'two' ? 'duo' : 'solo',
+      stage: selectedStage,
+      hasCustomLyrics: Boolean(topicInput),
+    });
+
     const success = deductCredits(requiredCredits);
     if (!success) return;
 
@@ -138,6 +145,9 @@ export default function GeneratorCard() {
 
       const data = await res.json();
       if (data.success) {
+        trackPreviewReady({
+          mode: photoMode === 'two' ? 'duo' : 'solo',
+        });
         setTimeout(() => {
           setIsGenerating(false);
           setGeneratedResult({

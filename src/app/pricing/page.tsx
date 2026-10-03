@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/context/AuthContext';
 import { Check, Sparkles, Zap, ShieldCheck } from 'lucide-react';
+import { trackBeginCheckout, trackPurchaseSuccess } from '@/lib/analytics';
 
 export default function PricingPage() {
   const { user, addCredits, openAuthModal } = useAuth();
@@ -18,6 +19,11 @@ export default function PricingPage() {
     if (params.get('payment') === 'success') {
       const creditsToAdd = Number(params.get('credits') || 10);
       addCredits(creditsToAdd, `Waffo Package Top-Up (+${creditsToAdd} Credits)`, 'purchase');
+      trackPurchaseSuccess({
+        planId: params.get('plan') || 'custom',
+        priceUsd: creditsToAdd === 50 ? 29 : creditsToAdd === 100 ? 29.9 : 9.99,
+        credits: creditsToAdd,
+      });
       alert(`🎉 Payment Successful! ${creditsToAdd} Credits added to your account.`);
       // 清除 URL 查询参数避免重复触发
       window.history.replaceState({}, '', '/pricing');
@@ -29,6 +35,16 @@ export default function PricingPage() {
       openAuthModal();
       return;
     }
+
+    const priceUsd = credits === 50 ? 29 : credits === 100 ? 29.9 : 9.99;
+    const planName = planId === 'pack' ? 'Creator 5-Pack' : planId === 'monthly' ? 'Pro Monthly' : 'Single Track';
+
+    trackBeginCheckout({
+      planId,
+      planName,
+      priceUsd,
+      credits,
+    });
 
     setLoadingPlan(planId);
     try {
@@ -45,6 +61,11 @@ export default function PricingPage() {
       } else if (data.success && data.mode === 'simulation') {
         // 模拟模式直接充值
         addCredits(credits);
+        trackPurchaseSuccess({
+          planId,
+          priceUsd,
+          credits,
+        });
         alert(`🎉 Payment Successful! ${credits} Credits added to your account.`);
       } else if (data.error) {
         alert(data.error);
