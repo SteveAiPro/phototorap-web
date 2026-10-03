@@ -59,6 +59,27 @@ export default function GeneratorCard() {
   const [photoMode, setPhotoMode] = useState<'two' | 'one'>('two');
   const [photo1, setPhoto1] = useState<string | null>(null);
   const [photo2, setPhoto2] = useState<string | null>(null);
+  const [isUploading1, setIsUploading1] = useState(false);
+  const [isUploading2, setIsUploading2] = useState(false);
+
+  // 上传图片至 Supabase Storage 获取公网 URL 供 AI 渲染与后台查看
+  const uploadImageFile = async (file: File): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        return data.url;
+      }
+    } catch (e) {
+      console.error('Failed to upload image', e);
+    }
+    return null;
+  };
 
   // Stage selection
   const [selectedStage, setSelectedStage] = useState('hotel-lobby');
@@ -101,6 +122,11 @@ export default function GeneratorCard() {
   ];
 
   const handleGenerate = async () => {
+    if (isUploading1 || isUploading2) {
+      alert('Photos are still uploading, please wait a moment...');
+      return;
+    }
+
     if (!photo1) {
       alert(photoMode === 'one' ? 'Please upload a photo with 2 people' : 'Please upload Photo 1 (You)');
       return;
@@ -221,16 +247,32 @@ export default function GeneratorCard() {
         {/* 上传卡片区域 */}
         <div className={`grid gap-3 sm:gap-4 ${photoMode === 'two' ? 'grid-cols-2' : 'grid-cols-1 max-w-sm mx-auto'}`}>
           {/* 照片 1 · 你 */}
-          <div className="relative group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#2F3446] bg-[#0A0C13] p-4 aspect-[4/5] sm:aspect-square hover:border-[#FF6A00] transition-all cursor-pointer">
+          <div className="relative group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#2F3446] bg-[#0A0C13] p-4 aspect-[4/5] sm:aspect-square hover:border-[#FF6A00] transition-all cursor-pointer overflow-hidden">
             <input
               type="file"
               accept="image/*"
+              disabled={isUploading1}
               className="absolute inset-0 opacity-0 cursor-pointer z-10"
-              onChange={(e) => {
-                if (e.target.files?.[0]) setPhoto1(URL.createObjectURL(e.target.files[0]));
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  // 先设置本地预览给用户极速视觉反馈
+                  setPhoto1(URL.createObjectURL(file));
+                  setIsUploading1(true);
+                  const remoteUrl = await uploadImageFile(file);
+                  if (remoteUrl) {
+                    setPhoto1(remoteUrl);
+                  }
+                  setIsUploading1(false);
+                }
               }}
             />
-            {photo1 ? (
+            {isUploading1 ? (
+              <div className="flex flex-col items-center justify-center">
+                <span className="h-8 w-8 rounded-full border-2 border-[#FF6A00] border-t-transparent animate-spin mb-2"></span>
+                <span className="text-xs font-semibold text-[#FF6A00]">Uploading photo...</span>
+              </div>
+            ) : photo1 ? (
               <img src={photo1} alt={photoMode === 'one' ? 'Duo Photo' : 'Photo 1'} className="h-full w-full rounded-xl object-cover object-top" />
             ) : (
               <>
@@ -249,16 +291,31 @@ export default function GeneratorCard() {
 
           {/* 照片 2 · 你的搭档 */}
           {photoMode === 'two' && (
-            <div className="relative group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#2F3446] bg-[#0A0C13] p-4 aspect-[4/5] sm:aspect-square hover:border-[#FF6A00] transition-all cursor-pointer">
+            <div className="relative group flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#2F3446] bg-[#0A0C13] p-4 aspect-[4/5] sm:aspect-square hover:border-[#FF6A00] transition-all cursor-pointer overflow-hidden">
               <input
                 type="file"
                 accept="image/*"
+                disabled={isUploading2}
                 className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) setPhoto2(URL.createObjectURL(e.target.files[0]));
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setPhoto2(URL.createObjectURL(file));
+                    setIsUploading2(true);
+                    const remoteUrl = await uploadImageFile(file);
+                    if (remoteUrl) {
+                      setPhoto2(remoteUrl);
+                    }
+                    setIsUploading2(false);
+                  }
                 }}
               />
-              {photo2 ? (
+              {isUploading2 ? (
+                <div className="flex flex-col items-center justify-center">
+                  <span className="h-8 w-8 rounded-full border-2 border-[#FF6A00] border-t-transparent animate-spin mb-2"></span>
+                  <span className="text-xs font-semibold text-[#FF6A00]">Uploading photo...</span>
+                </div>
+              ) : photo2 ? (
                 <img src={photo2} alt="Photo 2" className="h-full w-full rounded-xl object-cover object-top" />
               ) : (
                 <>
