@@ -102,7 +102,7 @@ export default function GeneratorCard() {
 
   const handleGenerate = async () => {
     if (!photo1) {
-      alert('Please upload Photo 1 (You)');
+      alert(photoMode === 'one' ? 'Please upload a photo with 2 people' : 'Please upload Photo 1 (You)');
       return;
     }
     if (photoMode === 'two' && !photo2) {
@@ -231,14 +231,18 @@ export default function GeneratorCard() {
               }}
             />
             {photo1 ? (
-              <img src={photo1} alt="Photo 1" className="h-full w-full rounded-xl object-cover object-top" />
+              <img src={photo1} alt={photoMode === 'one' ? 'Duo Photo' : 'Photo 1'} className="h-full w-full rounded-xl object-cover object-top" />
             ) : (
               <>
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FF6A00] text-black shadow-md transition-transform group-hover:scale-110">
                   <ImagePlus className="h-6 w-6 stroke-[2.2]" />
                 </div>
-                <span className="mt-3 text-sm font-bold text-white">{t.generator.photo1Label}</span>
-                <span className="mt-1 text-xs text-gray-400">{t.generator.photo1Hint}</span>
+                <span className="mt-3 text-sm font-bold text-white">
+                  {photoMode === 'one' ? t.generator.duoPhotoLabel : t.generator.photo1Label}
+                </span>
+                <span className="mt-1 text-xs text-gray-400 text-center px-2">
+                  {photoMode === 'one' ? t.generator.duoPhotoHint : t.generator.photo1Hint}
+                </span>
               </>
             )}
           </div>

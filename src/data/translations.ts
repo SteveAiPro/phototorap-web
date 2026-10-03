@@ -32,6 +32,8 @@ export interface Translations {
     photo1Hint: string;
     photo2Label: string;
     photo2Hint: string;
+    duoPhotoLabel: string;
+    duoPhotoHint: string;
     step1Footer: string;
 
     step2Title: string;
@@ -100,7 +102,9 @@ export const DICTIONARY: Record<Locale, Translations> = {
       photo1Hint: '点击添加一张清晰自拍',
       photo2Label: '照片 2 · 你的搭档',
       photo2Hint: '点击添加一张清晰自拍',
-      step1Footer: '正脸、光线充足的自拍效果最好。每张照片一张脸，两张不需要是合照。',
+      duoPhotoLabel: '双人合照 (包含2个人)',
+      duoPhotoHint: '上传一张包含你们两人的清晰合影',
+      step1Footer: '正脸、光线充足的照片效果最好。两张单人照或一张清晰合照，均会生成同样震撼的联手说唱视频！',
 
       step2Title: '选择舞台',
       stageHotelLobby: 'Hotel Lobby',
@@ -166,7 +170,9 @@ export const DICTIONARY: Record<Locale, Translations> = {
       photo1Hint: 'Tap to add a clear selfie',
       photo2Label: 'Photo 2 · Your duo',
       photo2Hint: 'Tap to add a clear selfie',
-      step1Footer: 'Front-facing, well-lit selfies work best. One face per photo — they don\'t need to be taken together.',
+      duoPhotoLabel: 'Duo Photo (2 People in 1 Picture)',
+      duoPhotoHint: 'Upload a clear shot showing both faces',
+      step1Footer: 'Front-facing, well-lit photos work best. Whether 2 separate selfies or 1 group photo, both generate the same viral rap duo video!',
 
       step2Title: 'Pick the stage',
       stageHotelLobby: 'Hotel Lobby',
@@ -232,7 +238,9 @@ export const DICTIONARY: Record<Locale, Translations> = {
       photo1Hint: 'Toca para subir un selfie',
       photo2Label: 'Foto 2 · Tu dúo',
       photo2Hint: 'Toca para subir un selfie',
-      step1Footer: 'Selfies frontales y bien iluminadas funcionan mejor.',
+      duoPhotoLabel: 'Foto del dúo (2 personas en 1 foto)',
+      duoPhotoHint: 'Sube una foto clara con ambos rostros',
+      step1Footer: 'Fotos frontales y bien iluminadas funcionan mejor. Ya sean 2 fotos individuales o 1 foto juntos, ambas generan el mismo video de rap dúo.',
 
       step2Title: 'Elige el escenario',
       stageHotelLobby: 'Hotel Lobby',
@@ -298,7 +306,9 @@ export const DICTIONARY: Record<Locale, Translations> = {
       photo1Hint: 'Appuyez pour ajouter un selfie',
       photo2Label: 'Photo 2 · Votre duo',
       photo2Hint: 'Appuyez pour ajouter un selfie',
-      step1Footer: 'Des selfies de face bien éclairés donnent les meilleurs résultats.',
+      duoPhotoLabel: 'Photo en duo (2 personnes sur 1 photo)',
+      duoPhotoHint: 'Téléchargez une photo nette avec les deux visages',
+      step1Footer: 'Des photos de face bien éclairées donnent les meilleurs résultats. 2 selfies ou 1 photo à deux créent le même clip de rap en duo.',
 
       step2Title: 'Choisissez le studio',
       stageHotelLobby: 'Hotel Lobby',
@@ -364,7 +374,9 @@ export const DICTIONARY: Record<Locale, Translations> = {
       photo1Hint: 'Toque para adicionar uma selfie',
       photo2Label: 'Foto 2 · Sua dupla',
       photo2Hint: 'Toque para adicionar uma selfie',
-      step1Footer: 'Selfies frontais bem iluminadas funcionam melhor.',
+      duoPhotoLabel: 'Foto da dupla (2 pessoas em 1 foto)',
+      duoPhotoHint: 'Envie uma foto nítida com os dois rostos',
+      step1Footer: 'Fotos frontais bem iluminadas funcionam melhor. Duas selfies ou uma foto juntos geram o mesmo vídeo de rap em dupla!',
 
       step2Title: 'Escolha o palco',
       stageHotelLobby: 'Hotel Lobby',
@@ -430,7 +442,9 @@ export const DICTIONARY: Record<Locale, Translations> = {
       photo1Hint: 'Tippen für klares Selfie',
       photo2Label: 'Foto 2 · Partner',
       photo2Hint: 'Tippen für klares Selfie',
-      step1Footer: 'Frontale, gut beleuchtete Selfies eignen sich am besten.',
+      duoPhotoLabel: 'Duo-Foto (2 Personen auf 1 Bild)',
+      duoPhotoHint: 'Klares Foto mit beiden Gesichtern hochladen',
+      step1Footer: 'Frontale, gut beleuchtete Fotos eignen sich am besten. Ob 2 Einzelfotos oder 1 gemeinsames Bild — beides liefert das gleiche Rap-Duo-Video!',
 
       step2Title: 'Wähle die Bühne',
       stageHotelLobby: 'Hotel Lobby',
@@ -496,7 +510,9 @@ export const DICTIONARY: Record<Locale, Translations> = {
       photo1Hint: 'タップして自撮りを追加',
       photo2Label: '写真 2 · パートナー',
       photo2Hint: 'タップして自撮りを追加',
-      step1Footer: '正面を向いた明るい自撮り写真が最も綺麗に仕上がります。',
+      duoPhotoLabel: '2人の写真（1枚に2人）',
+      duoPhotoHint: '2人の顔がはっきり写った写真を追加',
+      step1Footer: '正面を向いた明るい写真が最も綺麗に仕上がります。個別写真2枚でも2人の写真1枚でも、同じ本格ラップ動画が完成します！',
 
       step2Title: 'ステージを選択',
       stageHotelLobby: 'Hotel Lobby',
@@ -562,7 +578,9 @@ export const DICTIONARY: Record<Locale, Translations> = {
       photo1Hint: '선명한 셀카 추가',
       photo2Label: '사진 2 · 파트너',
       photo2Hint: '선명한 셀카 추가',
-      step1Footer: '정면을 바라보고 조명이 밝은 셀카가 가장 잘 나옵니다.',
+      duoPhotoLabel: '2인 단체 사진 (1장에 2명)',
+      duoPhotoHint: '두 사람의 얼굴이 선명한 사진 업로드',
+      step1Footer: '정면을 바라보고 조명이 밝은 사진이 가장 잘 나옵니다. 개인 사진 2장이든 1장의 단체 사진이든, 동일하게 완성도 높은 랩 비디오가 생성됩니다!',
 
       step2Title: '무대 선택',
       stageHotelLobby: 'Hotel Lobby',
