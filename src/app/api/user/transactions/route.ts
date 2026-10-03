@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(req: Request) {
   try {
@@ -60,12 +61,19 @@ export async function GET(req: Request) {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    return NextResponse.json({
-      success: true,
-      user,
-      transactions: userTransactions || [],
-      videos: videos || [],
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        user,
+        transactions: userTransactions || [],
+        videos: videos || [],
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
+    );
   } catch (err: any) {
     console.error('[api/user/transactions] Exception:', err);
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(req: Request) {
   try {
@@ -42,18 +43,25 @@ export async function GET(req: Request) {
       .reduce((acc, t) => acc + t.amount, 0);
     const totalGeneratedVideos = (videos || []).length;
 
-    return NextResponse.json({
-      success: true,
-      stats: {
-        totalUsers,
-        totalCreditsInCirculation,
-        totalPurchasedCredits,
-        totalGeneratedVideos,
+    return NextResponse.json(
+      {
+        success: true,
+        stats: {
+          totalUsers,
+          totalCreditsInCirculation,
+          totalPurchasedCredits,
+          totalGeneratedVideos,
+        },
+        users: users || [],
+        transactions: transactions || [],
+        videos: videos || [],
       },
-      users: users || [],
-      transactions: transactions || [],
-      videos: videos || [],
-    });
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
+    );
   } catch (err: any) {
     console.error('[api/admin/overview] Exception:', err);
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
