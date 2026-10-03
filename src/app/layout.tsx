@@ -3,7 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Photo to Rap: AI Rap Video Generator from Photos',
+  title: 'Photo to Rap: Free AI Rap Video Generator from Photos Online',
   description: 'Turn photos into viral AI rap videos in 3 minutes. Upload 1 or 2 selfies to get lip-synced rap duo & solo clips in Hotel Lobby style. Free preview.',
   metadataBase: new URL('https://phototorap.com'),
   alternates: {
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: 'Photo to Rap: AI Rap Video Generator from Photos',
+    title: 'Photo to Rap: Free AI Rap Video Generator from Photos Online',
     description: 'Turn photos into viral AI rap videos in 3 minutes. Upload 1 or 2 selfies to get lip-synced rap duo & solo clips in Hotel Lobby style. Free preview.',
     url: 'https://phototorap.com',
     siteName: 'PhotoToRap AI',
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Photo to Rap: AI Rap Video Generator from Photos',
+    title: 'Photo to Rap: Free AI Rap Video Generator from Photos Online',
     description: 'Turn photos into viral AI rap videos in 3 minutes. Upload 1 or 2 selfies to get lip-synced rap duo & solo clips in Hotel Lobby style. Free preview.',
     images: ['https://phototorap.com/og-image.png'],
   },
@@ -65,7 +65,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+  const gaId = process.env.NEXT_PUBLIC_GA_ID || 'G-5W3BLVCZPB';
 
   return (
     <html lang="en" className="dark scroll-smooth">

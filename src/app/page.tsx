@@ -28,6 +28,12 @@ export default function Home() {
         name: 'PhotoToRap AI',
         url: 'https://phototorap.com',
         logo: 'https://phototorap.com/icon.png',
+        contactPoint: {
+          '@type': 'ContactPoint',
+          email: 'support@phototorap.com',
+          contactType: 'customer service',
+          availableLanguage: ['English', 'Chinese', 'Spanish', 'French', 'German', 'Japanese'],
+        },
         sameAs: [
           'https://x.com/phototorap',
           'https://www.producthunt.com/products/phototorap',
