@@ -7,6 +7,9 @@ import { Flame, Check, Sparkles } from 'lucide-react';
 export const metadata = {
   title: 'Hotel Lobby AI Rap Video Generator | PhotoToRap AI',
   description: 'Create the viral Hotel Lobby COLORS booth rap video with two photos. Lip-synced Quavo & Takeoff style duo video ready in 3 minutes.',
+  alternates: {
+    canonical: 'https://phototorap.com/hotel-lobby-ai',
+  },
 };
 
 export default function HotelLobbyPage() {

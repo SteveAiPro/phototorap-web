@@ -5,6 +5,9 @@ import Footer from '@/components/Footer';
 export const metadata = {
   title: 'Terms of Service | PhotoToRap AI',
   description: 'Terms and Conditions governing the use of PhotoToRap AI services and generated content.',
+  alternates: {
+    canonical: 'https://phototorap.com/terms',
+  },
 };
 
 export default function TermsPage() {

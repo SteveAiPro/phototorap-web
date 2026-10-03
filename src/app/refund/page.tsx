@@ -5,6 +5,9 @@ import Footer from '@/components/Footer';
 export const metadata = {
   title: 'Refund Policy | PhotoToRap AI',
   description: 'Understand the refund policies and automated credit protection guarantees of PhotoToRap AI.',
+  alternates: {
+    canonical: 'https://phototorap.com/refund',
+  },
 };
 
 export default function RefundPage() {

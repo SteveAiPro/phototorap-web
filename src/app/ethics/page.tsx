@@ -5,6 +5,9 @@ import Footer from '@/components/Footer';
 export const metadata = {
   title: 'AI Ethics, Safety & Consent Guidelines | PhotoToRap AI',
   description: 'Our ethical principles, safety safeguards, and consent guidelines for responsible AI video creation.',
+  alternates: {
+    canonical: 'https://phototorap.com/ethics',
+  },
 };
 
 export default function EthicsPage() {

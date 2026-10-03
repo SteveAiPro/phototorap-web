@@ -19,6 +19,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: `${guide.title} | PhotoToRap AI Guides`,
     description: guide.description,
+    alternates: {
+      canonical: `https://phototorap.com/guides/${guide.slug}`,
+    },
     openGraph: {
       title: guide.title,
       description: guide.description,

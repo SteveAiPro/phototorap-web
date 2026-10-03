@@ -5,6 +5,9 @@ import Footer from '@/components/Footer';
 export const metadata = {
   title: 'Privacy Policy | PhotoToRap AI',
   description: 'Learn how PhotoToRap AI handles your data, uploaded photos, and protects user privacy.',
+  alternates: {
+    canonical: 'https://phototorap.com/privacy',
+  },
 };
 
 export default function PrivacyPage() {

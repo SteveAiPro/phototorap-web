@@ -8,6 +8,9 @@ import { BookOpen, Clock, ArrowRight, Sparkles } from 'lucide-react';
 export const metadata = {
   title: 'AI Rap Video Guides, Tutorials & Prompts | PhotoToRap AI',
   description: 'Master the viral Hotel Lobby rap trend. Step-by-step tutorials, 100+ funny rap lyric prompts, and expert settings for TikTok & Reels.',
+  alternates: {
+    canonical: 'https://phototorap.com/guides',
+  },
 };
 
 export default function GuidesHub() {
