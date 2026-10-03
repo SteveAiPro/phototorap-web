@@ -52,7 +52,7 @@ const MODELS: ModelOption[] = [
 ];
 
 export default function GeneratorCard() {
-  const { user, deductCredits, openAuthModal } = useAuth();
+  const { user, deductCredits, setUserCredits, openAuthModal } = useAuth();
   const { t } = useLanguage();
 
   // Tab switch: 两张单人照 vs 一张合照
@@ -145,6 +145,9 @@ export default function GeneratorCard() {
 
       const data = await res.json();
       if (data.success) {
+        if (typeof data.remainingCredits === 'number') {
+          setUserCredits(data.remainingCredits);
+        }
         trackPreviewReady({
           mode: photoMode === 'two' ? 'duo' : 'solo',
         });
@@ -156,10 +159,16 @@ export default function GeneratorCard() {
           });
         }, 1200);
       } else {
+        if (user) {
+          setUserCredits(user.credits + requiredCredits);
+        }
         alert(data.error || 'Generation failed');
         setIsGenerating(false);
       }
     } catch (e) {
+      if (user) {
+        setUserCredits(user.credits + requiredCredits);
+      }
       setIsGenerating(false);
       alert('Network error');
     }

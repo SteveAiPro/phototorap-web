@@ -18,6 +18,7 @@ interface AuthContextType {
   loginWithEmail: (email: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   deductCredits: (amount: number) => boolean;
+  setUserCredits: (credits: number) => void;
   addCredits: (amount: number, description?: string, type?: string) => void;
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
@@ -174,6 +175,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('phototorap_user');
   };
 
+  const setUserCredits = (credits: number) => {
+    if (!user) return;
+    const updated = { ...user, credits };
+    setUser(updated);
+    localStorage.setItem('phototorap_user', JSON.stringify(updated));
+  };
+
   const deductCredits = (amount: number) => {
     if (!user || user.credits < amount) {
       setIsAuthModalOpen(true);
@@ -182,13 +190,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const updated = { ...user, credits: user.credits - amount };
     setUser(updated);
     localStorage.setItem('phototorap_user', JSON.stringify(updated));
-
-    // Async sync with Supabase if online
-    const supabase = createClient();
-    if (supabase && user.id && !user.id.startsWith('usr_')) {
-      supabase.rpc('deduct_credits', { p_user_id: user.id, p_amount: amount }).then();
-    }
-
     return true;
   };
 
@@ -228,6 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithEmail,
         logout,
         deductCredits,
+        setUserCredits,
         addCredits,
         isAuthModalOpen,
         openAuthModal: () => setIsAuthModalOpen(true),
