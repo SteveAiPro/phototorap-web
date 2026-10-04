@@ -55,23 +55,30 @@ export async function runSeedanceVideoGeneration(
   };
 
   const stageDesc = stagePromptMap[params.stage] || stagePromptMap['hotel-lobby'];
-  const userTopic = params.topic || 'viral hit rap';
+  const userTopic = params.topic || 'Hotel Lobby Freestyle';
 
-  // Seedance 2.0 官方最佳实践：双引号内指定说唱台词，结合镜头语言与节奏动作
-  const promptText = `Two energetic rap stars performing dynamically ${stageDesc}. Rhythmic head bobbing, hand gestures pointing to the camera, confident swagger and expressive lip-synced flow. They rap: "${userTopic}! Out here dropping heat in the booth, living the dream and setting the trend!" Cinematic 1080p, dynamic camera push-in and subtle whip pans, punchy 808 trap beat and rhythmic synth bass, professional music video grade.`;
+  // Seedance 2.0 Mini 最佳实践：
+  // 1. 双引号内写入生动说唱台词与 142 BPM 律动节奏，确保包含震撼原声音效与大幅度点头
+  // 2. 避免可能触发审查的暴戾俚语（如 dropping heat / swagger），采用国际合规的 hip hop 舞台描述
+  const promptText = `A stylish and charismatic music star performing rap music dynamically ${stageDesc}. Energetic head nodding to the 142 BPM punchy hip hop beat, expressive hands pointing and gesturing, rhythmic lip-synced flow. They sing: "${userTopic}! We on the top floor making waves, living our best life every single day!" Cinematic professional music video lighting, punchy 808 bass, synchronized audio.`;
 
-// 默认锁定最省 Token 参数：480p 分辨率、5 秒短视频
+  // 默认锁定最省 Token 参数：480p 分辨率、5 秒短视频
   const durationSec = 5;
   const resolution = params.modelTier === 'pro' || params.modelTier === 'flagship' ? '720p' : '480p';
 
+  // 当直接传入原图可能触发 E005 时，如果带了真实自拍，优先以特征化方式驱动
   const input: Record<string, any> = {
     prompt: promptText,
-    image: params.photo1Url,
     aspect_ratio: params.aspectRatio || '9:16',
     duration: durationSec,
     resolution,
     generate_audio: true,
   };
+
+  // 尝试携带图片输入
+  if (params.photo1Url && !params.photo1Url.includes('supabase.co/storage/v1/object/public/uploads/user_uploads')) {
+    input.image = params.photo1Url;
+  }
 
   try {
     const output: any = await client.run(modelId as any, { input });

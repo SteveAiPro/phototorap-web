@@ -51,12 +51,12 @@ export async function POST(req: Request) {
     let taskId = 'task_' + Math.random().toString(36).substring(7);
     let realGenerationSuccess = false;
 
-    // 如果已配置 REPLICATE_API_TOKEN，优先使用 LivePortrait（5秒 480p/512px，极致省Token且对真实人脸自拍完全不触发E005敏感过滤）
-    // 若 LivePortrait 遇到意外，则尝试 Seedance 2.0 Mini (480p 5s) 保底
+    // 如果已配置 REPLICATE_API_TOKEN，优先使用 ByteDance Seedance 2.0 Mini（480p 5s，原生带 142 BPM 鼓点伴奏与真实说唱歌词台词）
+    // 若遇到意外，则尝试 LivePortrait 保底
     if (isReplicateConfigured()) {
       try {
-        console.log('[api/generate] Starting LivePortrait generation (5s, 480p/512px) for user photo...');
-        const lpRes = await runLivePortraitVideoGeneration({
+        console.log('[api/generate] Starting Seedance 2.0 Mini generation (5s, 480p with Rap audio)...');
+        const repRes = await runSeedanceVideoGeneration({
           photo1Url: photo1,
           photo2Url: photo2,
           stage,
@@ -65,16 +65,16 @@ export async function POST(req: Request) {
           aspectRatio: body.aspectRatio || '9:16',
           modelTier: body.model || 'standard',
         });
-        if (lpRes.videoUrl) {
-          videoUrl = lpRes.videoUrl;
-          taskId = lpRes.id;
+        if (repRes.videoUrl) {
+          videoUrl = repRes.videoUrl;
+          taskId = repRes.id;
           realGenerationSuccess = true;
-          console.log('[api/generate] LivePortrait generation succeeded:', videoUrl);
+          console.log('[api/generate] Seedance rap generation succeeded:', videoUrl);
         }
-      } catch (lpErr: any) {
-        console.warn('[api/generate] LivePortrait call error, trying Seedance 2.0-mini 480p fallback:', lpErr?.message || lpErr);
+      } catch (repErr: any) {
+        console.warn('[api/generate] Seedance call error, trying LivePortrait fallback:', repErr?.message || repErr);
         try {
-          const repRes = await runSeedanceVideoGeneration({
+          const lpRes = await runLivePortraitVideoGeneration({
             photo1Url: photo1,
             photo2Url: photo2,
             stage,
@@ -83,14 +83,14 @@ export async function POST(req: Request) {
             aspectRatio: body.aspectRatio || '9:16',
             modelTier: body.model || 'standard',
           });
-          if (repRes.videoUrl) {
-            videoUrl = repRes.videoUrl;
-            taskId = repRes.id;
+          if (lpRes.videoUrl) {
+            videoUrl = lpRes.videoUrl;
+            taskId = lpRes.id;
             realGenerationSuccess = true;
-            console.log('[api/generate] Seedance generation succeeded:', videoUrl);
+            console.log('[api/generate] LivePortrait generation succeeded:', videoUrl);
           }
-        } catch (repErr: any) {
-          console.error('[api/generate] Both AI models failed:', repErr?.message || repErr);
+        } catch (lpErr: any) {
+          console.error('[api/generate] Both AI models failed:', lpErr?.message || lpErr);
         }
       }
     }
