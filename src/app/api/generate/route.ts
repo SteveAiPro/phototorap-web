@@ -95,6 +95,43 @@ export async function POST(req: Request) {
       }
     }
 
+    // 如果 AI 成功生成了 Replicate Delivery 临时视频，立即自动流式转存到 Supabase Storage 永久持久化！
+    // 避免 Replicate 1 小时后自动清理导致链接 404
+    const admin = getSupabaseAdmin();
+    if (realGenerationSuccess && videoUrl && videoUrl.startsWith('http') && admin) {
+      try {
+        console.log('[api/generate] Persisting Replicate video to permanent Supabase Storage...', videoUrl);
+        const vidResp = await fetch(videoUrl);
+        if (vidResp.ok) {
+          const vidBuffer = Buffer.from(await vidResp.arrayBuffer());
+          const fileName = `rap_${Date.now()}_${Math.random().toString(36).substring(7)}.mp4`;
+          const filePath = `generated_videos/${fileName}`;
+
+          const { error: uploadErr } = await admin.storage
+            .from('uploads')
+            .upload(filePath, vidBuffer, {
+              contentType: 'video/mp4',
+              upsert: true,
+            });
+
+          if (!uploadErr) {
+            const { data: publicData } = admin.storage
+              .from('uploads')
+              .getPublicUrl(filePath);
+
+            if (publicData?.publicUrl) {
+              videoUrl = publicData.publicUrl;
+              console.log('[api/generate] Video successfully saved to Supabase permanent CDN:', videoUrl);
+            }
+          } else {
+            console.warn('[api/generate] Failed to upload to Supabase storage, keeping original URL:', uploadErr);
+          }
+        }
+      } catch (saveErr) {
+        console.error('[api/generate] Error saving video to Supabase:', saveErr);
+      }
+    }
+
     // 如果没有配置 AI 或者 AI 生成失败且是正式用户操作，绝不扣费并提示用户
     const isMockOrGuest = !userId || userId.startsWith('usr_');
 
@@ -107,35 +144,41 @@ export async function POST(req: Request) {
       );
     }
 
-    // 如果提供了真实用户 ID，且生成成功（或未配置 AI 时的演示体验模式），执行扣积分和写入记录
-    const admin = getSupabaseAdmin();
+    // 无论正式登录用户还是游客，只要生成成功，都全量记录到后台 video_generations 数据表！
     let remainingCredits: number | null = null;
 
-    if (admin && userId && !userId.startsWith('usr_')) {
-      // 扣除积分
-      remainingCredits = await deductCredits(
-        userId,
-        creditsDeducted,
-        `Generated 5s rap video (${stage || 'hotel-lobby'})`
-      );
-
-      if (remainingCredits === null) {
-        return NextResponse.json(
-          { error: 'Insufficient credits to generate video. Please top up your balance.' },
-          { status: 402 }
+    if (admin) {
+      // 1. 如果是正式登录用户，执行扣减积分
+      if (userId && !userId.startsWith('usr_')) {
+        remainingCredits = await deductCredits(
+          userId,
+          creditsDeducted,
+          `Generated 5s rap video (${stage || 'hotel-lobby'})`
         );
+
+        if (remainingCredits === null) {
+          return NextResponse.json(
+            { error: 'Insufficient credits to generate video. Please top up your balance.' },
+            { status: 402 }
+          );
+        }
       }
 
-      // 写入 video_generations 记录
-      await admin.from('video_generations').insert({
-        user_id: userId,
-        stage: stage || 'hotel_lobby',
-        audio_beat: body.model || 'standard',
-        lyrics_topic: topic || 'Custom Rap Freestyle',
-        status: 'completed',
-        video_url: videoUrl,
-        cost_credits: creditsDeducted,
-      });
+      // 2. 全量写入 video_generations 记录（供管理员后台实时查看与播放）
+      const recordUserId = (userId && !userId.startsWith('usr_')) ? userId : (userId || 'guest_user');
+      try {
+        await admin.from('video_generations').insert({
+          user_id: recordUserId,
+          stage: stage || 'hotel_lobby',
+          audio_beat: body.model || 'standard',
+          lyrics_topic: topic || 'Custom Rap Freestyle',
+          status: 'completed',
+          video_url: videoUrl,
+          cost_credits: (userId && !userId.startsWith('usr_')) ? creditsDeducted : 0,
+        });
+      } catch (insertErr) {
+        console.warn('[api/generate] Error recording video in database:', insertErr);
+      }
     }
 
     return NextResponse.json({
