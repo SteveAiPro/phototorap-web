@@ -60,15 +60,16 @@ export async function runSeedanceVideoGeneration(
   // Seedance 2.0 官方最佳实践：双引号内指定说唱台词，结合镜头语言与节奏动作
   const promptText = `Two energetic rap stars performing dynamically ${stageDesc}. Rhythmic head bobbing, hand gestures pointing to the camera, confident swagger and expressive lip-synced flow. They rap: "${userTopic}! Out here dropping heat in the booth, living the dream and setting the trend!" Cinematic 1080p, dynamic camera push-in and subtle whip pans, punchy 808 trap beat and rhythmic synth bass, professional music video grade.`;
 
-  // 解析时长（秒）：默认 5 或 10 秒，最大 15 秒，-1 为智能自适应时长
-  const durationSec = params.duration === '15s' ? 10 : 5;
+// 默认锁定最省 Token 参数：480p 分辨率、5 秒短视频
+  const durationSec = 5;
+  const resolution = params.modelTier === 'pro' || params.modelTier === 'flagship' ? '720p' : '480p';
 
   const input: Record<string, any> = {
     prompt: promptText,
     image: params.photo1Url,
     aspect_ratio: params.aspectRatio || '9:16',
     duration: durationSec,
-    resolution: params.modelTier === 'pro' ? '720p' : '720p',
+    resolution,
     generate_audio: true,
   };
 
@@ -96,9 +97,9 @@ export async function runSeedanceVideoGeneration(
 }
 
 /**
- * 兼容旧版 LivePortrait / 通用模型调用
+ * 调度 LivePortrait：专为真人人脸照片提供 5 秒 480p/512px 极速高保真对口型与律动渲染
  */
-export async function runReplicateVideoGeneration(
+export async function runLivePortraitVideoGeneration(
   params: GenerateVideoParams
 ): Promise<{ videoUrl: string; id: string }> {
   const client = getReplicate();
@@ -106,34 +107,71 @@ export async function runReplicateVideoGeneration(
     throw new Error('Replicate API token is not configured');
   }
 
-  const modelIdentifier =
-    process.env.REPLICATE_MODEL ||
-    'fofr/live-portrait:9b3b0d463b712b323145d02fa74a4f89d5a7d770c0c6ca78028f80cb528247ea';
+  const livePortraitVersion =
+    process.env.REPLICATE_LIVEPORTRAIT_VERSION ||
+    '067dd98cc3e5cb396c4a9efb4bba3eec6c4a9d271211325c477518fc6485e146';
 
+  const stageVideoMap: Record<string, string> = {
+    'luxury-lobby': 'https://phototorap.com/examples/neon-elevator.mp4',
+    'studio-booth': 'https://phototorap.com/examples/grandpas.mp4',
+    'street-cypher': 'https://phototorap.com/examples/orange-street.mp4',
+    'hotel-lobby': 'https://phototorap.com/examples/friends.mp4',
+  };
+
+  const drivingVideo = stageVideoMap[params.stage] || stageVideoMap['hotel-lobby'];
+
+  // 125 帧（25fps * 5s = 5秒），live_portrait_dsize 512 相当于标清 480p，极大节省算力和 Token
   const input: Record<string, any> = {
-    source_image: params.photo1Url,
-    driving_video:
-      params.stage === 'luxury-lobby'
-        ? 'https://phototorap.com/examples/neon-elevator.mp4'
-        : params.stage === 'studio-booth'
-        ? 'https://phototorap.com/examples/grandpas.mp4'
-        : params.stage === 'street-cypher'
-        ? 'https://phototorap.com/examples/orange-street.mp4'
-        : 'https://phototorap.com/examples/friends.mp4',
+    face_image: params.photo1Url,
+    driving_video: drivingVideo,
+    video_frame_load_cap: 125,
+    live_portrait_dsize: 512,
   };
 
-  if (params.photo2Url) {
-    input.driving_multiplier = 1.0;
+  try {
+    const prediction: any = await client.predictions.create({
+      version: livePortraitVersion,
+      input,
+    });
+
+    // 等待预测完成（轮询，最长等待 90 秒）
+    const predictionId = prediction.id;
+    let completedPrediction = prediction;
+    const startTime = Date.now();
+
+    while (
+      completedPrediction.status !== 'succeeded' &&
+      completedPrediction.status !== 'failed' &&
+      completedPrediction.status !== 'canceled' &&
+      Date.now() - startTime < 90000
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      completedPrediction = await client.predictions.get(predictionId);
+    }
+
+    if (completedPrediction.status !== 'succeeded') {
+      throw new Error(
+        completedPrediction.error ||
+          `LivePortrait prediction finished with status: ${completedPrediction.status}`
+      );
+    }
+
+    let videoUrl = '';
+    const out = completedPrediction.output;
+    if (typeof out === 'string') {
+      videoUrl = out;
+    } else if (Array.isArray(out) && out.length > 0) {
+      videoUrl = typeof out[0] === 'string' ? out[0] : out[0]?.url?.() || String(out[0]);
+    } else if (out && typeof out === 'object') {
+      videoUrl = out.url ? (typeof out.url === 'function' ? out.url() : out.url) : '';
+    }
+
+    return {
+      id: predictionId,
+      videoUrl,
+    };
+  } catch (error: any) {
+    console.error('[runLivePortraitVideoGeneration] Error:', error);
+    throw error;
   }
-
-  const prediction = await client.predictions.create({
-    version: modelIdentifier.includes(':') ? modelIdentifier.split(':')[1] : undefined,
-    model: !modelIdentifier.includes(':') ? (modelIdentifier as any) : undefined,
-    input,
-  });
-
-  return {
-    id: prediction.id,
-    videoUrl: typeof prediction.output === 'string' ? prediction.output : '',
-  };
 }

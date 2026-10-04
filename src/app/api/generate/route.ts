@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { deductCredits } from '@/lib/credits';
-import { isReplicateConfigured, runSeedanceVideoGeneration } from '@/lib/replicate';
+import {
+  isReplicateConfigured,
+  runSeedanceVideoGeneration,
+  runLivePortraitVideoGeneration,
+} from '@/lib/replicate';
 import { checkPromptSafety } from '@/lib/waffo';
 
 export async function POST(req: Request) {
@@ -45,29 +49,65 @@ export async function POST(req: Request) {
 
     let videoUrl = stageVideoMap[stage] || '/examples/friends.mp4';
     let taskId = 'task_' + Math.random().toString(36).substring(7);
+    let realGenerationSuccess = false;
 
-    // 如果已配置 REPLICATE_API_TOKEN，则尝试接入真实的 ByteDance Seedance 2.0 (或 2.0-fast)
+    // 如果已配置 REPLICATE_API_TOKEN，优先使用 LivePortrait（5秒 480p/512px，极致省Token且对真实人脸自拍完全不触发E005敏感过滤）
+    // 若 LivePortrait 遇到意外，则尝试 Seedance 2.0 Mini (480p 5s) 保底
     if (isReplicateConfigured()) {
       try {
-        const repRes = await runSeedanceVideoGeneration({
+        console.log('[api/generate] Starting LivePortrait generation (5s, 480p/512px) for user photo...');
+        const lpRes = await runLivePortraitVideoGeneration({
           photo1Url: photo1,
           photo2Url: photo2,
           stage,
           topic,
-          duration: body.duration || '12s',
+          duration: '5s',
           aspectRatio: body.aspectRatio || '9:16',
           modelTier: body.model || 'standard',
         });
-        if (repRes.videoUrl) {
-          videoUrl = repRes.videoUrl;
+        if (lpRes.videoUrl) {
+          videoUrl = lpRes.videoUrl;
+          taskId = lpRes.id;
+          realGenerationSuccess = true;
+          console.log('[api/generate] LivePortrait generation succeeded:', videoUrl);
         }
-        taskId = repRes.id;
-      } catch (repErr) {
-        console.warn('[api/generate] Replicate Seedance call warning, using fallback render:', repErr);
+      } catch (lpErr: any) {
+        console.warn('[api/generate] LivePortrait call error, trying Seedance 2.0-mini 480p fallback:', lpErr?.message || lpErr);
+        try {
+          const repRes = await runSeedanceVideoGeneration({
+            photo1Url: photo1,
+            photo2Url: photo2,
+            stage,
+            topic,
+            duration: '5s',
+            aspectRatio: body.aspectRatio || '9:16',
+            modelTier: body.model || 'standard',
+          });
+          if (repRes.videoUrl) {
+            videoUrl = repRes.videoUrl;
+            taskId = repRes.id;
+            realGenerationSuccess = true;
+            console.log('[api/generate] Seedance generation succeeded:', videoUrl);
+          }
+        } catch (repErr: any) {
+          console.error('[api/generate] Both AI models failed:', repErr?.message || repErr);
+        }
       }
     }
 
-    // 如果提供了真实用户 ID，执行原子扣积分和写入任务记录
+    // 如果没有配置 AI 或者 AI 生成失败且是正式用户操作，绝不扣费并提示用户
+    const isMockOrGuest = !userId || userId.startsWith('usr_');
+
+    if (!realGenerationSuccess && !isMockOrGuest && isReplicateConfigured()) {
+      return NextResponse.json(
+        {
+          error: 'AI video generation is currently experiencing high load. No credits were deducted. Please try again with a clearer portrait photo.',
+        },
+        { status: 503 }
+      );
+    }
+
+    // 如果提供了真实用户 ID，且生成成功（或未配置 AI 时的演示体验模式），执行扣积分和写入记录
     const admin = getSupabaseAdmin();
     let remainingCredits: number | null = null;
 
@@ -76,7 +116,7 @@ export async function POST(req: Request) {
       remainingCredits = await deductCredits(
         userId,
         creditsDeducted,
-        `Generated ${body.duration || '12s'} rap video (${stage || 'hotel-lobby'})`
+        `Generated 5s rap video (${stage || 'hotel-lobby'})`
       );
 
       if (remainingCredits === null) {
