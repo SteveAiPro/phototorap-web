@@ -29,11 +29,68 @@ export async function GET(req: Request) {
       .limit(100);
 
     // 3. 全站视频生成任务历史 (最近 100 条)
-    const { data: videos, error: vidError } = await admin
+    const { data: rawVideos, error: vidError } = await admin
       .from('video_generations')
       .select('id, user_id, stage, audio_beat, lyrics_topic, status, video_url, cost_credits, created_at')
       .order('created_at', { ascending: false })
       .limit(100);
+
+    // 尝试拉取 user_uploads 目录中的真实照片，作为历史老记录的智能时间窗口关联
+    let storagePhotos: any[] = [];
+    try {
+      const { data: photoList } = await admin.storage
+        .from('uploads')
+        .list('user_uploads', {
+          limit: 100,
+          sortBy: { column: 'created_at', order: 'desc' },
+        });
+      if (photoList && photoList.length > 0) {
+        storagePhotos = photoList.map((p) => ({
+          name: p.name,
+          created_at: p.created_at,
+          url: admin.storage.from('uploads').getPublicUrl(`user_uploads/${p.name}`).data.publicUrl,
+          time: p.created_at ? new Date(p.created_at).getTime() : 0,
+        }));
+      }
+    } catch (e) {
+      console.warn('[api/admin/overview] Failed to list storage photos:', e);
+    }
+
+    const videos = (rawVideos || []).map((v) => {
+      let parsedTopic = v.lyrics_topic || 'Custom Freestyle';
+      let photo1: string | null = null;
+      let photo2: string | null = null;
+
+      if (v.lyrics_topic && v.lyrics_topic.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(v.lyrics_topic);
+          parsedTopic = parsed.topic || 'Custom Freestyle';
+          photo1 = parsed.photo1 || null;
+          photo2 = parsed.photo2 || null;
+        } catch {}
+      }
+
+      // 如果历史老记录未直接存 photo1/photo2，则通过时间戳在 storagePhotos 中匹配生成前 15 分钟内的图片
+      if (!photo1 && storagePhotos.length > 0) {
+        const vTime = new Date(v.created_at).getTime();
+        const matched = storagePhotos.filter(
+          (p) => p.time <= vTime + 60000 && vTime - p.time <= 15 * 60 * 1000
+        );
+        if (matched.length > 0) {
+          photo1 = matched[0].url;
+          if (matched.length > 1) {
+            photo2 = matched[1].url;
+          }
+        }
+      }
+
+      return {
+        ...v,
+        lyrics_topic: parsedTopic,
+        photo1,
+        photo2,
+      };
+    });
 
     // 4. 统计汇总数据
     const totalUsers = users?.length || 0;

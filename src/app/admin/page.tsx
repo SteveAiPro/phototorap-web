@@ -23,6 +23,7 @@ import {
   Calendar,
   AlertCircle,
   CheckCircle2,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface UserRow {
@@ -51,6 +52,8 @@ interface VideoRow {
   stage: string;
   audio_beat: string;
   lyrics_topic: string | null;
+  photo1?: string | null;
+  photo2?: string | null;
   status: string;
   video_url: string | null;
   cost_credits: number;
@@ -426,12 +429,13 @@ export default function AdminPage() {
                   <tr>
                     <th className="p-4">ID</th>
                     <th className="p-4">User ID</th>
+                    <th className="p-4">Uploaded Photos</th>
                     <th className="p-4">Stage</th>
                     <th className="p-4">Topic</th>
                     <th className="p-4">Cost</th>
                     <th className="p-4">Status</th>
                     <th className="p-4">Date</th>
-                    <th className="p-4 text-right">Preview</th>
+                    <th className="p-4 text-right">Video</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1D202C]">
@@ -440,6 +444,51 @@ export default function AdminPage() {
                       <td className="p-4 font-mono text-gray-500">#{v.id}</td>
                       <td className="p-4 font-mono text-gray-400 truncate max-w-[140px]">
                         {v.user_id}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-1.5">
+                          {v.photo1 ? (
+                            <a
+                              href={v.photo1}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-[#222533] bg-black hover:border-[#FF6A00] transition-colors"
+                              title="Click to view full photo 1"
+                            >
+                              <img
+                                src={v.photo1}
+                                alt="Input 1"
+                                className="h-full w-full object-cover object-top transition-transform group-hover:scale-110"
+                              />
+                              <span className="absolute bottom-0 right-0 rounded-tl bg-black/80 px-1 text-[9px] font-bold text-white">
+                                1
+                              </span>
+                            </a>
+                          ) : (
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#222533] bg-[#0E1017] text-gray-600">
+                              <ImageIcon className="h-4 w-4" />
+                            </span>
+                          )}
+
+                          {v.photo2 ? (
+                            <a
+                              href={v.photo2}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-[#222533] bg-black hover:border-[#FF6A00] transition-colors"
+                              title="Click to view full photo 2"
+                            >
+                              <img
+                                src={v.photo2}
+                                alt="Input 2"
+                                className="h-full w-full object-cover object-top transition-transform group-hover:scale-110"
+                              />
+                              <span className="absolute bottom-0 right-0 rounded-tl bg-black/80 px-1 text-[9px] font-bold text-white">
+                                2
+                              </span>
+                            </a>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="p-4 capitalize text-white font-medium">
                         {v.stage?.replace('-', ' ')}
@@ -464,7 +513,7 @@ export default function AdminPage() {
                             href={v.video_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[#FF6A00] hover:underline"
+                            className="inline-flex items-center gap-1 rounded-lg border border-[#222533] bg-[#0A0C13] px-2.5 py-1 text-xs font-bold text-[#FF6A00] hover:border-[#FF6A00] transition-colors"
                           >
                             <span>Watch</span>
                             <ExternalLink className="h-3 w-3" />

@@ -37,6 +37,8 @@ interface VideoItem {
   stage: string;
   audio_beat: string;
   lyrics_topic: string | null;
+  photo1?: string | null;
+  photo2?: string | null;
   status: string;
   video_url: string | null;
   cost_credits: number;
@@ -307,14 +309,45 @@ export default function AccountPage() {
                       className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 gap-4 hover:bg-[#181B26]/50 transition-colors"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="relative aspect-[9/16] w-12 sm:w-14 rounded-lg overflow-hidden bg-black border border-[#222533] shrink-0">
-                          {vid.video_url && (
-                            <video
-                              src={vid.video_url}
-                              className="h-full w-full object-cover"
-                              muted
-                              playsInline
-                            />
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* 渲染后的视频预览 */}
+                          <div className="relative aspect-[9/16] w-12 sm:w-14 rounded-lg overflow-hidden bg-black border border-[#222533] shrink-0">
+                            {vid.video_url && (
+                              <video
+                                src={vid.video_url}
+                                className="h-full w-full object-cover"
+                                muted
+                                playsInline
+                              />
+                            )}
+                          </div>
+
+                          {/* 原始上传照片预览 */}
+                          {(vid.photo1 || vid.photo2) && (
+                            <div className="flex flex-col gap-1 shrink-0">
+                              {vid.photo1 && (
+                                <a
+                                  href={vid.photo1}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="h-6 w-6 rounded border border-[#222533] overflow-hidden hover:border-[#FF6A00]"
+                                  title="Original photo 1"
+                                >
+                                  <img src={vid.photo1} alt="" className="h-full w-full object-cover object-top" />
+                                </a>
+                              )}
+                              {vid.photo2 && (
+                                <a
+                                  href={vid.photo2}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="h-6 w-6 rounded border border-[#222533] overflow-hidden hover:border-[#FF6A00]"
+                                  title="Original photo 2"
+                                >
+                                  <img src={vid.photo2} alt="" className="h-full w-full object-cover object-top" />
+                                </a>
+                              )}
+                            </div>
                           )}
                         </div>
                         <div>

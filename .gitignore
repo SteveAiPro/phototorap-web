@@ -12,3 +12,4 @@ out
 *.log
 waffo_private.pem
 
+.env*

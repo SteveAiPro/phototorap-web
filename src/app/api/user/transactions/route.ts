@@ -54,12 +54,34 @@ export async function GET(req: Request) {
     }
 
     // 3. 获取生成的视频任务历史 (video_generations)
-    const { data: videos, error: videoError } = await admin
+    const { data: rawVideos, error: videoError } = await admin
       .from('video_generations')
       .select('id, stage, audio_beat, lyrics_topic, status, video_url, cost_credits, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50);
+
+    const videos = (rawVideos || []).map((v) => {
+      let parsedTopic = v.lyrics_topic || 'Custom Freestyle';
+      let photo1: string | null = null;
+      let photo2: string | null = null;
+
+      if (v.lyrics_topic && v.lyrics_topic.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(v.lyrics_topic);
+          parsedTopic = parsed.topic || 'Custom Freestyle';
+          photo1 = parsed.photo1 || null;
+          photo2 = parsed.photo2 || null;
+        } catch {}
+      }
+
+      return {
+        ...v,
+        lyrics_topic: parsedTopic,
+        photo1,
+        photo2,
+      };
+    });
 
     return NextResponse.json(
       {

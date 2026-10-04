@@ -172,14 +172,20 @@ export async function POST(req: Request) {
         }
       }
 
-      // 2. 全量写入 video_generations 记录（供管理员后台实时查看与播放）
+      // 2. 全量写入 video_generations 记录（包含生成时上传的原始照片，供管理员后台与创作者实时查看与播放）
       const recordUserId = (userId && !userId.startsWith('usr_')) ? userId : (userId || 'guest_user');
       try {
+        const payloadTopic = JSON.stringify({
+          topic: topic || 'Custom Rap Freestyle',
+          photo1: photo1 || null,
+          photo2: photo2 || null,
+        });
+
         await admin.from('video_generations').insert({
           user_id: recordUserId,
           stage: stage || 'hotel_lobby',
           audio_beat: body.model || 'standard',
-          lyrics_topic: topic || 'Custom Rap Freestyle',
+          lyrics_topic: payloadTopic,
           status: 'completed',
           video_url: videoUrl,
           cost_credits: (userId && !userId.startsWith('usr_')) ? creditsDeducted : 0,
