@@ -13,6 +13,14 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { photo1, photo2, stage, topic, mode, userId } = body;
 
+    // 严格限制：未登录游客绝对禁止使用 AI 生成接口，必须先注册/登录
+    if (!userId || userId.startsWith('usr_')) {
+      return NextResponse.json(
+        { error: 'Please sign in or create an account to generate AI rap videos.' },
+        { status: 401 }
+      );
+    }
+
     if (!photo1) {
       return NextResponse.json({ error: 'At least one photo is required.' }, { status: 400 });
     }

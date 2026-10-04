@@ -605,24 +605,35 @@ export default function GeneratorCard() {
       </div>
 
       {/* 橙色大号 CTA 生成按钮 */}
-      <button
-        type="button"
-        onClick={handleGenerate}
-        disabled={isGenerating}
-        className="group relative flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6A00] to-[#FF8A00] py-4 text-base font-black uppercase tracking-wider text-black shadow-xl shadow-[#FF6A00]/30 hover:from-[#FF7D1A] hover:to-[#FFA01A] transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
-      >
-        {isGenerating ? (
-          <>
-            <span className="h-5 w-5 rounded-full border-2 border-black border-t-transparent animate-spin"></span>
-            <span>{t.generator.generatingBtn}</span>
-          </>
-        ) : (
-          <>
-            <Mic className="h-5 w-5 fill-black stroke-black" />
-            <span>{t.generator.ctaBtn}</span>
-          </>
-        )}
-      </button>
+      {!user ? (
+        <button
+          type="button"
+          onClick={openAuthModal}
+          className="group relative flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6A00] to-[#FF8A00] py-4 text-base font-black uppercase tracking-wider text-black shadow-xl shadow-[#FF6A00]/30 hover:from-[#FF7D1A] hover:to-[#FFA01A] transition-all hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <Mic className="h-5 w-5 fill-black stroke-black" />
+          <span>Sign In to Generate (10 Free Credits)</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={isGenerating}
+          className="group relative flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6A00] to-[#FF8A00] py-4 text-base font-black uppercase tracking-wider text-black shadow-xl shadow-[#FF6A00]/30 hover:from-[#FF7D1A] hover:to-[#FFA01A] transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+        >
+          {isGenerating ? (
+            <>
+              <span className="h-5 w-5 rounded-full border-2 border-black border-t-transparent animate-spin"></span>
+              <span>{t.generator.generatingBtn}</span>
+            </>
+          ) : (
+            <>
+              <Mic className="h-5 w-5 fill-black stroke-black" />
+              <span>{t.generator.ctaBtn}</span>
+            </>
+          )}
+        </button>
+      )}
 
       {/* 底部保障提示 */}
       <p className="mt-3 text-center text-xs text-gray-400">

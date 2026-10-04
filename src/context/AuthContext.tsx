@@ -92,22 +92,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem('phototorap_user');
     if (stored) {
       try {
-        setUser(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        // 如果是历史遗留的虚拟 guest 用户 (usr_xxx)，清理掉，强制要求正式登录
+        if (parsed?.id && !parsed.id.startsWith('usr_')) {
+          setUser(parsed);
+          return;
+        }
       } catch (e) {
-        setUser(null);
+        // ignore parse error
       }
-    } else {
-      // Default initial guest user with 10 free credits for immediate trial
-      const defaultUser: User = {
-        id: 'usr_' + Math.random().toString(36).substring(7),
-        email: 'creator@phototorap.com',
-        name: 'Rap Creator',
-        avatar: '/examples/friends.jpg',
-        credits: 10,
-      };
-      setUser(defaultUser);
-      localStorage.setItem('phototorap_user', JSON.stringify(defaultUser));
     }
+    // 未登录访客严格保持为 null，不分配虚拟游客身份
+    setUser(null);
+    localStorage.removeItem('phototorap_user');
   };
 
   // Google OAuth Login
