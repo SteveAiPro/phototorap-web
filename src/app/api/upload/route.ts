@@ -21,26 +21,44 @@ export async function POST(req: Request) {
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     const filePath = `user_uploads/${fileName}`;
 
-    const { data, error } = await admin.storage
-      .from(bucket)
-      .upload(filePath, buffer, {
-        contentType: file.type || 'image/png',
-        upsert: true,
-      });
+    let publicUrl = '';
 
-    if (error) {
-      console.error('[api/upload] Supabase storage upload error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    // 1. 优先上传至 Cloudflare R2 全球 CDN
+    try {
+      const { uploadToR2 } = await import('@/lib/r2');
+      publicUrl = await uploadToR2(filePath, buffer, file.type || 'image/png');
+      console.log('[api/upload] Image uploaded to Cloudflare R2:', publicUrl);
+    } catch (r2Err) {
+      console.warn('[api/upload] Cloudflare R2 upload error, falling back to Supabase:', r2Err);
     }
 
-    const { data: publicUrlData } = admin.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
+    // 2. 同时双写同步备份到 Supabase Storage
+    try {
+      const { data, error } = await admin.storage
+        .from(bucket)
+        .upload(filePath, buffer, {
+          contentType: file.type || 'image/png',
+          upsert: true,
+        });
+
+      if (!publicUrl) {
+        if (error) {
+          console.error('[api/upload] Supabase storage upload error:', error);
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+        const { data: publicUrlData } = admin.storage
+          .from(bucket)
+          .getPublicUrl(filePath);
+        publicUrl = publicUrlData.publicUrl;
+      }
+    } catch (sbErr) {
+      console.warn('[api/upload] Supabase backup upload error:', sbErr);
+    }
 
     return NextResponse.json({
       success: true,
-      path: data.path,
-      url: publicUrlData.publicUrl,
+      path: filePath,
+      url: publicUrl,
       bucket,
     });
   } catch (err: any) {

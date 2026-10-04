@@ -103,40 +103,53 @@ export async function POST(req: Request) {
       }
     }
 
-    // 如果 AI 成功生成了 Replicate Delivery 临时视频，立即自动流式转存到 Supabase Storage 永久持久化！
-    // 避免 Replicate 1 小时后自动清理导致链接 404
+    // 如果 AI 成功生成了 Replicate Delivery 临时视频，立即自动流式转存到 Cloudflare R2 永久持久化！
+    // 享受 0 出网流量费与全球 Anycast CDN 高速分发，避免 Replicate 1 小时后自动删除
     const admin = getSupabaseAdmin();
-    if (realGenerationSuccess && videoUrl && videoUrl.startsWith('http') && admin) {
+    if (realGenerationSuccess && videoUrl && videoUrl.startsWith('http')) {
       try {
-        console.log('[api/generate] Persisting Replicate video to permanent Supabase Storage...', videoUrl);
+        console.log('[api/generate] Persisting Replicate video to permanent Cloudflare R2 Storage...', videoUrl);
         const vidResp = await fetch(videoUrl);
         if (vidResp.ok) {
           const vidBuffer = Buffer.from(await vidResp.arrayBuffer());
           const fileName = `rap_${Date.now()}_${Math.random().toString(36).substring(7)}.mp4`;
           const filePath = `generated_videos/${fileName}`;
 
-          const { error: uploadErr } = await admin.storage
-            .from('uploads')
-            .upload(filePath, vidBuffer, {
-              contentType: 'video/mp4',
-              upsert: true,
-            });
+          let r2SavedUrl = '';
+          try {
+            const { uploadToR2 } = await import('@/lib/r2');
+            r2SavedUrl = await uploadToR2(filePath, vidBuffer, 'video/mp4');
+            console.log('[api/generate] Video successfully saved to Cloudflare R2 CDN:', r2SavedUrl);
+            videoUrl = r2SavedUrl;
+          } catch (r2Err) {
+            console.warn('[api/generate] R2 upload error, falling back to Supabase:', r2Err);
+          }
 
-          if (!uploadErr) {
-            const { data: publicData } = admin.storage
-              .from('uploads')
-              .getPublicUrl(filePath);
+          // 同步备份至 Supabase Storage
+          if (admin) {
+            try {
+              const { error: uploadErr } = await admin.storage
+                .from('uploads')
+                .upload(filePath, vidBuffer, {
+                  contentType: 'video/mp4',
+                  upsert: true,
+                });
 
-            if (publicData?.publicUrl) {
-              videoUrl = publicData.publicUrl;
-              console.log('[api/generate] Video successfully saved to Supabase permanent CDN:', videoUrl);
+              if (!r2SavedUrl && !uploadErr) {
+                const { data: publicData } = admin.storage
+                  .from('uploads')
+                  .getPublicUrl(filePath);
+                if (publicData?.publicUrl) {
+                  videoUrl = publicData.publicUrl;
+                }
+              }
+            } catch (sbErr) {
+              console.warn('[api/generate] Supabase storage backup failed:', sbErr);
             }
-          } else {
-            console.warn('[api/generate] Failed to upload to Supabase storage, keeping original URL:', uploadErr);
           }
         }
       } catch (saveErr) {
-        console.error('[api/generate] Error saving video to Supabase:', saveErr);
+        console.error('[api/generate] Error saving video to storage:', saveErr);
       }
     }
 
