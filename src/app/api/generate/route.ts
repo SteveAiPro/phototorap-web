@@ -72,6 +72,7 @@ export async function POST(req: Request) {
           duration: '5s',
           aspectRatio: body.aspectRatio || '9:16',
           modelTier: body.model || 'standard',
+          mode: mode || (photo2 ? 'two' : 'one'),
         });
         if (repRes.videoUrl) {
           videoUrl = repRes.videoUrl;
@@ -90,6 +91,7 @@ export async function POST(req: Request) {
             duration: '5s',
             aspectRatio: body.aspectRatio || '9:16',
             modelTier: body.model || 'standard',
+            mode: mode || (photo2 ? 'two' : 'one'),
           });
           if (lpRes.videoUrl) {
             videoUrl = lpRes.videoUrl;

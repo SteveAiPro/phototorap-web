@@ -28,6 +28,7 @@ export interface GenerateVideoParams {
   duration?: string;
   aspectRatio?: string;
   modelTier?: 'standard' | 'fast' | 'pro' | 'flagship';
+  mode?: 'two' | 'one';
 }
 
 /**
@@ -57,10 +58,25 @@ export async function runSeedanceVideoGeneration(
   const stageDesc = stagePromptMap[params.stage] || stagePromptMap['hotel-lobby'];
   const userTopic = params.topic || 'Hotel Lobby Freestyle';
 
-  // Seedance 2.0 Mini 最佳实践：
-  // 1. 双引号内写入生动说唱台词与 142 BPM 律动节奏，确保包含震撼原声音效与大幅度点头
-  // 2. 避免可能触发审查的暴戾俚语（如 dropping heat / swagger），采用国际合规的 hip hop 舞台描述
-  const promptText = `A stylish and charismatic music star performing rap music dynamically ${stageDesc}. Energetic head nodding to the 142 BPM punchy hip hop beat, expressive hands pointing and gesturing, rhythmic lip-synced flow. They sing: "${userTopic}! We on the top floor making waves, living our best life every single day!" Cinematic professional music video lighting, punchy 808 bass, synchronized audio.`;
+  const hasTwoPeople = Boolean(params.photo2Url || params.mode === 'two' || params.mode === 'one');
+
+  // Seedance 2.0 Mini 最佳实践（双人合唱说唱 Duo 特别优化）：
+  // 1. 明确双人主体：Two charismatic rap stars / Dynamic rap duo standing side-by-side in the same frame
+  // 2. 肢体与节奏：两人同框随 142 BPM 重低音节拍大幅度点头晃脑、互相碰拳/对视互动、交替与同时开嗓
+  // 3. 双人合唱对口型：Both performers passionately rapping together, trading lines and shouting the duet chorus in perfect sync
+  const duoDesc = hasTwoPeople
+    ? 'A charismatic duo of two rap artists standing side-by-side in the same frame, performing a dynamic rap track together'
+    : 'A charismatic rap artist performing dynamically';
+
+  const duoAction = hasTwoPeople
+    ? 'Both rappers vibing together, nodding heads aggressively to the 142 BPM punchy 808 hip hop beat, pointing fingers, trading rap verses, and singing the chorus together in harmony. Perfect synchronized lip-syncing for both people with natural duo chemistry'
+    : 'Energetic head nodding to the 142 BPM punchy hip hop beat, expressive hands pointing and gesturing, rhythmic lip-synced flow';
+
+  const duoLyrics = hasTwoPeople
+    ? `They shout together: "${userTopic}! Tag team legends on the mic, we run the game day and night!"`
+    : `They sing: "${userTopic}! We on the top floor making waves, living our best life every single day!"`;
+
+  const promptText = `${duoDesc} ${stageDesc}. ${duoAction}. ${duoLyrics}. Cinematic music video camera movements, vivid studio lighting, crisp punchy 808 bass, synchronized rap vocals and beats.`;
 
   // 默认锁定最省 Token 参数：480p 分辨率、5 秒短视频
   const durationSec = 5;
