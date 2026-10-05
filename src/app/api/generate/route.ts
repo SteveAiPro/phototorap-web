@@ -59,12 +59,13 @@ export async function POST(req: Request) {
     let taskId = 'task_' + Math.random().toString(36).substring(7);
     let realGenerationSuccess = false;
 
-    // 如果已配置 REPLICATE_API_TOKEN，优先使用 ByteDance Seedance 2.0 Mini（480p 5s，原生带 142 BPM 鼓点伴奏与真实说唱歌词台词）
-    // 若遇到意外，则尝试 LivePortrait 保底
+    // 如果已配置 REPLICATE_API_TOKEN，异步创建 ByteDance Seedance 2.0 Mini 任务并立即返回
+    // 避免同步等待被 Vercel 15 秒超时无情杀掉
     if (isReplicateConfigured()) {
       try {
-        console.log('[api/generate] Starting Seedance 2.0 Mini generation (5s, 480p with Rap audio)...');
-        const repRes = await runSeedanceVideoGeneration({
+        const { createSeedancePrediction } = await import('@/lib/replicate');
+        console.log('[api/generate] Submitting async prediction to Seedance 2.0 Mini...');
+        const pred = await createSeedancePrediction({
           photo1Url: photo1,
           photo2Url: photo2,
           stage,
@@ -74,34 +75,21 @@ export async function POST(req: Request) {
           modelTier: body.model || 'standard',
           mode: mode || (photo2 ? 'two' : 'one'),
         });
-        if (repRes.videoUrl) {
-          videoUrl = repRes.videoUrl;
-          taskId = repRes.id;
-          realGenerationSuccess = true;
-          console.log('[api/generate] Seedance rap generation succeeded:', videoUrl);
-        }
+
+        console.log('[api/generate] Prediction created successfully with ID:', pred.id);
+        return NextResponse.json({
+          success: true,
+          async: true,
+          predictionId: pred.id,
+          status: pred.status,
+          creditsDeducted,
+        });
       } catch (repErr: any) {
-        console.warn('[api/generate] Seedance call error, trying LivePortrait fallback:', repErr?.message || repErr);
-        try {
-          const lpRes = await runLivePortraitVideoGeneration({
-            photo1Url: photo1,
-            photo2Url: photo2,
-            stage,
-            topic,
-            duration: '5s',
-            aspectRatio: body.aspectRatio || '9:16',
-            modelTier: body.model || 'standard',
-            mode: mode || (photo2 ? 'two' : 'one'),
-          });
-          if (lpRes.videoUrl) {
-            videoUrl = lpRes.videoUrl;
-            taskId = lpRes.id;
-            realGenerationSuccess = true;
-            console.log('[api/generate] LivePortrait generation succeeded:', videoUrl);
-          }
-        } catch (lpErr: any) {
-          console.error('[api/generate] Both AI models failed:', lpErr?.message || lpErr);
-        }
+        console.error('[api/generate] Seedance prediction creation failed:', repErr);
+        return NextResponse.json(
+          { error: repErr?.message || 'Failed to submit generation job. Please try again.' },
+          { status: 500 }
+        );
       }
     }
 

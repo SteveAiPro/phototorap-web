@@ -168,9 +168,7 @@ export default function GeneratorCard() {
       hasCustomLyrics: Boolean(topicInput),
     });
 
-    const success = deductCredits(requiredCredits);
-    if (!success) return;
-
+    // 只有在真正拿到最终渲染成片后，系统才在服务端原子扣减积分，前端在此处不盲目扣减
     setIsGenerating(true);
     try {
       const res = await fetch('/api/generate', {
@@ -191,7 +189,67 @@ export default function GeneratorCard() {
       });
 
       const data = await res.json();
-      if (data.success) {
+      if (!data.success) {
+        alert(data.error || 'Generation failed');
+        setIsGenerating(false);
+        return;
+      }
+
+      // 如果后端采用异步调度模式 (Replicate Prediction ID 轮询机制)
+      if (data.async && data.predictionId) {
+        const predId = data.predictionId;
+        const topicStr = topicInput || selectedOccasion;
+        const queryParams = new URLSearchParams({
+          id: predId,
+          userId: user.id,
+          stage: selectedStage,
+          topic: topicStr,
+          photo1: photo1 || '',
+          photo2: photo2 || '',
+          model: selectedModel,
+        });
+
+        // 客户端轻量轮询：每 3 秒检查一次状态，最长持续 3 分钟
+        let pollAttempts = 0;
+        const maxPollAttempts = 60; // 60 * 3s = 180s
+
+        const pollInterval = setInterval(async () => {
+          pollAttempts++;
+          try {
+            const statusRes = await fetch(`/api/generate/status?${queryParams.toString()}`);
+            const statusData = await statusRes.json();
+
+            if (statusData.status === 'completed' && statusData.videoUrl) {
+              clearInterval(pollInterval);
+              if (typeof statusData.remainingCredits === 'number') {
+                setUserCredits(statusData.remainingCredits);
+              }
+              trackPreviewReady({
+                mode: photoMode === 'two' ? 'duo' : 'solo',
+              });
+              setIsGenerating(false);
+              setGeneratedResult({
+                videoUrl: statusData.videoUrl,
+                lyrics: statusData.lyrics || 'Two legends on the mic!',
+              });
+            } else if (statusData.status === 'failed' || statusData.status === 'canceled') {
+              clearInterval(pollInterval);
+              setIsGenerating(false);
+              alert(statusData.error || 'AI generation could not complete. No credits were deducted.');
+            } else if (pollAttempts >= maxPollAttempts) {
+              clearInterval(pollInterval);
+              setIsGenerating(false);
+              alert('Generation took longer than usual. Your credits were not deducted. Please try again.');
+            }
+          } catch (pollErr) {
+            console.error('Polling error:', pollErr);
+          }
+        }, 3000);
+        return;
+      }
+
+      // 兼容同步返回模式
+      if (data.videoUrl) {
         if (typeof data.remainingCredits === 'number') {
           setUserCredits(data.remainingCredits);
         }
@@ -205,19 +263,10 @@ export default function GeneratorCard() {
             lyrics: data.lyrics,
           });
         }, 1200);
-      } else {
-        if (user) {
-          setUserCredits(user.credits + requiredCredits);
-        }
-        alert(data.error || 'Generation failed');
-        setIsGenerating(false);
       }
     } catch (e) {
-      if (user) {
-        setUserCredits(user.credits + requiredCredits);
-      }
       setIsGenerating(false);
-      alert('Network error');
+      alert('Network error. Please try again.');
     }
   };
 

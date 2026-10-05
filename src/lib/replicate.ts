@@ -36,9 +36,9 @@ export interface GenerateVideoParams {
  * - bytedance/seedance-2.0-mini (官方 Mini 轻量版：超高性价比、快速生成，支持文字/图片/视频/音频多模态、原生音画同步)
  * - bytedance/seedance-2.0 (标准版，旗舰多模态对口型/音乐视频生成，支持 1080p、原生音乐与人声动作联动)
  */
-export async function runSeedanceVideoGeneration(
+export async function createSeedancePrediction(
   params: GenerateVideoParams
-): Promise<{ videoUrl: string; id: string }> {
+): Promise<{ id: string; status: string }> {
   const client = getReplicate();
   if (!client) {
     throw new Error('Replicate API token is not configured');
@@ -97,26 +97,68 @@ export async function runSeedanceVideoGeneration(
   }
 
   try {
-    const output: any = await client.run(modelId as any, { input });
-    
-    // Replicate 的输出可能为输出视频 URL 字符串、URL 数组或包含 url() 的对象
-    let videoUrl = '';
-    if (typeof output === 'string') {
-      videoUrl = output;
-    } else if (Array.isArray(output) && output.length > 0) {
-      videoUrl = typeof output[0] === 'string' ? output[0] : output[0]?.url?.() || String(output[0]);
-    } else if (output && typeof output === 'object') {
-      videoUrl = output.url ? (typeof output.url === 'function' ? output.url() : output.url) : '';
-    }
+    // 异步创建 Prediction 任务，避免 Vercel Serverless 超时截断
+    const prediction: any = await client.predictions.create({
+      version: '4c173327636db3074d6de60bba57122e4a3ed73c32732132442fe569f8db5d6e',
+      input,
+    });
 
     return {
-      id: 'rep_' + Math.random().toString(36).substring(7),
-      videoUrl,
+      id: prediction.id,
+      status: prediction.status, // starting, processing, succeeded, failed
     };
   } catch (error: any) {
-    console.error('[runSeedanceVideoGeneration] Error:', error);
+    console.error('[createSeedancePrediction] Error:', error);
     throw error;
   }
+}
+
+/**
+ * 轮询查询 Replicate Prediction 任务的当前状态与视频输出
+ */
+export async function getReplicatePrediction(predictionId: string): Promise<{
+  id: string;
+  status: 'starting' | 'processing' | 'succeeded' | 'failed' | 'canceled';
+  videoUrl?: string | null;
+  error?: string | null;
+}> {
+  const client = getReplicate();
+  if (!client) {
+    throw new Error('Replicate API token is not configured');
+  }
+
+  const p: any = await client.predictions.get(predictionId);
+  let videoUrl: string | null = null;
+
+  if (p.output) {
+    if (typeof p.output === 'string') {
+      videoUrl = p.output;
+    } else if (Array.isArray(p.output) && p.output.length > 0) {
+      videoUrl = typeof p.output[0] === 'string' ? p.output[0] : p.output[0]?.url?.() || String(p.output[0]);
+    } else if (typeof p.output === 'object') {
+      videoUrl = p.output.url ? (typeof p.output.url === 'function' ? p.output.url() : p.output.url) : null;
+    }
+  }
+
+  return {
+    id: p.id,
+    status: p.status,
+    videoUrl,
+    error: p.error || null,
+  };
+}
+
+/**
+ * 兼容旧版的同步运行接口（单次执行轮询或短等待）
+ */
+export async function runSeedanceVideoGeneration(
+  params: GenerateVideoParams
+): Promise<{ videoUrl: string; id: string }> {
+  const pred = await createSeedancePrediction(params);
+  return {
+    id: pred.id,
+    videoUrl: '',
+  };
 }
 
 /**
