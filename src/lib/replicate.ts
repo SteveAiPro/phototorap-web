@@ -58,31 +58,48 @@ export async function createSeedancePrediction(
   const stageDesc = stagePromptMap[params.stage] || stagePromptMap['hotel-lobby'];
   const userTopic = params.topic || 'Hotel Lobby Freestyle';
 
-  const hasTwoPeople = Boolean(params.photo2Url || params.mode === 'two' || params.mode === 'one');
+  // 收集有效参考图片（支持 1~2 张输入）
+  const referenceImages: string[] = [];
+  if (params.photo1Url && params.photo1Url.startsWith('http')) {
+    referenceImages.push(params.photo1Url);
+  }
+  if (params.photo2Url && params.photo2Url.startsWith('http')) {
+    referenceImages.push(params.photo2Url);
+  }
 
-  // Seedance 2.0 Mini 最佳实践（双人合唱说唱 Duo 特别优化）：
-  // 1. 明确双人主体：Two charismatic rap stars / Dynamic rap duo standing side-by-side in the same frame
-  // 2. 肢体与节奏：两人同框随 142 BPM 重低音节拍大幅度点头晃脑、互相碰拳/对视互动、交替与同时开嗓
-  // 3. 双人合唱对口型：Both performers passionately rapping together, trading lines and shouting the duet chorus in perfect sync
-  const duoDesc = hasTwoPeople
-    ? 'A charismatic duo of two rap artists standing side-by-side in the same frame, performing a dynamic rap track together'
-    : 'A charismatic rap artist performing dynamically';
+  const hasTwoCharacters = referenceImages.length >= 2 || Boolean(params.photo2Url) || params.mode === 'two';
 
-  const duoAction = hasTwoPeople
-    ? 'Both rappers vibing together, nodding heads aggressively to the 142 BPM punchy 808 hip hop beat, pointing fingers, trading rap verses, and singing the chorus together in harmony. Perfect synchronized lip-syncing for both people with natural duo chemistry'
-    : 'Energetic head nodding to the 142 BPM punchy hip hop beat, expressive hands pointing and gesturing, rhythmic lip-synced flow';
+  // Seedance 2.0 Mini 角色精准匹配架构：
+  // 1. 如果有两张参考图，严格通过 [Image1] 与 [Image2] 指向角色实体（支持人与人、人与狗/猫、双宠物）
+  // 2. 肢体与节奏：随 142 BPM 重低音节拍大幅度点头晃脑、对口型说唱合唱
+  let characterDesc = '';
+  let duoAction = '';
+  let duoLyrics = '';
 
-  const duoLyrics = hasTwoPeople
-    ? `They shout together: "${userTopic}! Tag team legends on the mic, we run the game day and night!"`
-    : `They sing: "${userTopic}! We on the top floor making waves, living our best life every single day!"`;
+  if (referenceImages.length === 2) {
+    characterDesc = 'The character in [Image1] and the character in [Image2] standing side-by-side in the same frame as a viral rap duo';
+    duoAction = 'Both [Image1] and [Image2] vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, performing an energetic rap duet with synchronized lip-syncing and hilarious chemistry';
+    duoLyrics = `Both performers shout together into the mic: "${userTopic}! Tag team legends running the game!"`;
+  } else if (referenceImages.length === 1) {
+    characterDesc = 'The character in [Image1] performing a high-energy rap track as a solo star';
+    duoAction = '[Image1] vibing and aggressively nodding head to the 142 BPM punchy 808 hip hop beat, pointing fingers and making iconic hip hop gestures, rapping with synchronized lip-syncing';
+    duoLyrics = `Rapping with swagger: "${userTopic}! Living our best life on the top floor!"`;
+  } else {
+    characterDesc = hasTwoCharacters
+      ? 'A charismatic duo of rap artists standing side-by-side in the same frame, performing a dynamic rap track together'
+      : 'A charismatic rap artist performing dynamically';
+    duoAction = hasTwoCharacters
+      ? 'Both rappers vibing together, nodding heads aggressively to the 142 BPM punchy 808 hip hop beat, pointing fingers, trading rap verses, and singing the chorus together with natural duo chemistry'
+      : 'Energetic head nodding to the 142 BPM punchy hip hop beat, expressive hands pointing and gesturing, rhythmic lip-synced flow';
+    duoLyrics = `Rapping to the beat: "${userTopic}!"`;
+  }
 
-  const promptText = `${duoDesc} ${stageDesc}. ${duoAction}. ${duoLyrics}. Cinematic music video camera movements, vivid studio lighting, crisp punchy 808 bass, synchronized rap vocals and beats.`;
+  const promptText = `${characterDesc} ${stageDesc}. ${duoAction}. ${duoLyrics}. Cinematic music video camera movements, vivid studio lighting, crisp punchy 808 bass, synchronized rap vocals and beats.`;
 
   // 默认锁定最省 Token 参数：480p 分辨率、5 秒短视频
   const durationSec = 5;
   const resolution = params.modelTier === 'pro' || params.modelTier === 'flagship' ? '720p' : '480p';
 
-  // 当直接传入原图可能触发 E005 时，如果带了真实自拍，优先以特征化方式驱动
   const input: Record<string, any> = {
     prompt: promptText,
     aspect_ratio: params.aspectRatio || '9:16',
@@ -91,9 +108,9 @@ export async function createSeedancePrediction(
     generate_audio: true,
   };
 
-  // 尝试携带图片输入
-  if (params.photo1Url && !params.photo1Url.includes('supabase.co/storage/v1/object/public/uploads/user_uploads')) {
-    input.image = params.photo1Url;
+  // 传入多模态参考图
+  if (referenceImages.length > 0) {
+    input.reference_images = referenceImages;
   }
 
   try {
