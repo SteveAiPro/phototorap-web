@@ -68,30 +68,24 @@ export async function createSeedancePrediction(
   }
 
   const hasTwoCharacters = referenceImages.length >= 2 || Boolean(params.photo2Url) || params.mode === 'two';
+  const isSolo = !hasTwoCharacters;
 
-  // Seedance 2.0 Mini 角色精准匹配架构：
-  // 1. 如果有两张参考图，严格通过 [Image1] 与 [Image2] 指向角色实体（支持人与人、人与狗/猫、双宠物）
-  // 2. 肢体与节奏：随 142 BPM 重低音节拍大幅度点头晃脑、对口型说唱合唱
+  // Seedance 2.0 Mini 最佳实践：
+  // - 不直接传递真实人脸照片作为 reference_images，避免触发 E005 人脸深度伪造安全拦截器
+  // - 以高质感的角色 + 场景 + 动作 + 歌词 Prompt 文字驱动，保证成功率
+  // - 角色描述使用通用风格词而非绑定具体人脸
   let characterDesc = '';
   let duoAction = '';
   let duoLyrics = '';
 
-  if (referenceImages.length === 2) {
-    characterDesc = 'The character in [Image1] and the character in [Image2] standing side-by-side in the same frame as a viral rap duo';
-    duoAction = 'Both [Image1] and [Image2] vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, performing an energetic rap duet with synchronized lip-syncing and hilarious chemistry';
-    duoLyrics = `Both performers shout together into the mic: "${userTopic}! Tag team legends running the game!"`;
-  } else if (referenceImages.length === 1) {
-    characterDesc = 'The character in [Image1] performing a high-energy rap track as a solo star';
-    duoAction = '[Image1] vibing and aggressively nodding head to the 142 BPM punchy 808 hip hop beat, pointing fingers and making iconic hip hop gestures, rapping with synchronized lip-syncing';
-    duoLyrics = `Rapping with swagger: "${userTopic}! Living our best life on the top floor!"`;
+  if (!isSolo) {
+    characterDesc = 'Two charismatic rap performers — one person and one companion — standing side-by-side in the same frame as a viral rap duo';
+    duoAction = 'Both performers vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, delivering an electrifying rap duet with synchronized lip-syncing and hilarious chemistry';
+    duoLyrics = `Both performers shout together into the mic: "${userTopic}! Tag team legends running the game, we own every single day!"`;
   } else {
-    characterDesc = hasTwoCharacters
-      ? 'A charismatic duo of rap artists standing side-by-side in the same frame, performing a dynamic rap track together'
-      : 'A charismatic rap artist performing dynamically';
-    duoAction = hasTwoCharacters
-      ? 'Both rappers vibing together, nodding heads aggressively to the 142 BPM punchy 808 hip hop beat, pointing fingers, trading rap verses, and singing the chorus together with natural duo chemistry'
-      : 'Energetic head nodding to the 142 BPM punchy hip hop beat, expressive hands pointing and gesturing, rhythmic lip-synced flow';
-    duoLyrics = `Rapping to the beat: "${userTopic}!"`;
+    characterDesc = 'A charismatic rap performer with swagger and stage presence';
+    duoAction = 'Vibing and aggressively nodding head to the 142 BPM punchy 808 hip hop beat, pointing fingers and making iconic hip hop gestures, rapping with synchronized lip-syncing';
+    duoLyrics = `Rapping with swagger: "${userTopic}! Living our best life on the top floor, unstoppable every day!"`;
   }
 
   const promptText = `${characterDesc} ${stageDesc}. ${duoAction}. ${duoLyrics}. Cinematic music video camera movements, vivid studio lighting, crisp punchy 808 bass, synchronized rap vocals and beats.`;
@@ -108,10 +102,8 @@ export async function createSeedancePrediction(
     generate_audio: true,
   };
 
-  // 传入多模态参考图
-  if (referenceImages.length > 0) {
-    input.reference_images = referenceImages;
-  }
+  // 注意：不传 reference_images 避免 E005 人脸深度伪造安全拦截
+  // 用户照片仅用于管理后台审计与追踪，不直接送入模型推理
 
   try {
     // 异步创建 Prediction 任务，避免 Vercel Serverless 超时截断

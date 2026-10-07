@@ -152,6 +152,18 @@ export default function GeneratorCard() {
       alert(photoMode === 'one' ? 'Please upload a photo with 2 people' : 'Please upload Photo 1 (You)');
       return;
     }
+
+    // 严格防止 blob: 临时地址进入生成流程
+    // blob: URL 仅在当前浏览器会话内存中有效，上传尚未完成，不能发给后端存储
+    if (photo1.startsWith('blob:')) {
+      alert('Photo 1 is still uploading, please wait a moment...');
+      return;
+    }
+    if (photo2 && photo2.startsWith('blob:')) {
+      alert('Photo 2 is still uploading, please wait a moment...');
+      return;
+    }
+
     if (photoMode === 'two' && !photo2) {
       alert('Please upload Photo 2 (Your partner/duo)');
       return;
