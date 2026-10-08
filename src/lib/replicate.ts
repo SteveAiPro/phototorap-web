@@ -58,34 +58,51 @@ export async function createSeedancePrediction(
   const stageDesc = stagePromptMap[params.stage] || stagePromptMap['hotel-lobby'];
   const userTopic = params.topic || 'Hotel Lobby Freestyle';
 
-  // 收集有效参考图片（支持 1~2 张输入）
+  // 收集有效参考图片（支持 1~2 张输入）。
+  // 只接受真正的公网 http(s) 地址：blob: 只是当前浏览器会话的内存地址，
+  // 传给 Replicate 必然取不到图，会被静默忽略甚至报错。
+  const isPublicUrl = (u?: string): u is string => Boolean(u && /^https?:\/\//.test(u));
+
   const referenceImages: string[] = [];
-  if (params.photo1Url && params.photo1Url.startsWith('http')) {
+  if (isPublicUrl(params.photo1Url)) {
     referenceImages.push(params.photo1Url);
   }
-  if (params.photo2Url && params.photo2Url.startsWith('http')) {
+  if (isPublicUrl(params.photo2Url)) {
     referenceImages.push(params.photo2Url);
   }
+  console.log(
+    `[createSeedancePrediction] reference_images=${referenceImages.length} (photo1=${isPublicUrl(params.photo1Url) ? 'ok' : 'invalid'}, photo2=${isPublicUrl(params.photo2Url) ? 'ok' : 'none'})`
+  );
 
   const hasTwoCharacters = referenceImages.length >= 2 || Boolean(params.photo2Url) || params.mode === 'two';
   const isSolo = !hasTwoCharacters;
 
-  // Seedance 2.0 Mini 最佳实践：
-  // - 不直接传递真实人脸照片作为 reference_images，避免触发 E005 人脸深度伪造安全拦截器
-  // - 以高质感的角色 + 场景 + 动作 + 歌词 Prompt 文字驱动，保证成功率
-  // - 角色描述使用通用风格词而非绑定具体人脸
+  // 角色描述必须显式指向参考图实体，并用 [ImageN] 占位符与 reference_images 一一对应。
+  // 这是官方 schema 规定的引用方式；一旦省略，模型会自行"编"两个陌生人出来，
+  // 生成结果与用户上传的照片完全无关。
   let characterDesc = '';
   let duoAction = '';
   let duoLyrics = '';
 
-  if (!isSolo) {
-    characterDesc = 'Two charismatic rap performers — one person and one companion — standing side-by-side in the same frame as a viral rap duo';
-    duoAction = 'Both performers vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, delivering an electrifying rap duet with synchronized lip-syncing and hilarious chemistry';
+  if (referenceImages.length >= 2) {
+    characterDesc = 'The two people shown in [Image1] and [Image2] standing side-by-side in the same frame as a viral rap duo, keeping their real faces, hairstyles and outfits exactly as in the reference photos';
+    duoAction = 'Both people from [Image1] and [Image2] vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, delivering an electrifying rap duet with synchronized lip-syncing and hilarious chemistry';
     duoLyrics = `Both performers shout together into the mic: "${userTopic}! Tag team legends running the game, we own every single day!"`;
-  } else {
-    characterDesc = 'A charismatic rap performer with swagger and stage presence';
-    duoAction = 'Vibing and aggressively nodding head to the 142 BPM punchy 808 hip hop beat, pointing fingers and making iconic hip hop gestures, rapping with synchronized lip-syncing';
+  } else if (referenceImages.length === 1) {
+    characterDesc = isSolo
+      ? 'The two people shown in [Image1] performing together as a viral rap duo, keeping their real faces, hairstyles and outfits exactly as in the reference photo'
+      : 'The person shown in [Image1] performing as a charismatic rap star, keeping their real face, hairstyle and outfit exactly as in the reference photo';
+    duoAction = isSolo
+      ? 'Both people from [Image1] vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, rapping with synchronized lip-syncing'
+      : 'The person from [Image1] vibing and aggressively nodding head to the 142 BPM punchy 808 hip hop beat, pointing fingers and making iconic hip hop gestures, rapping with synchronized lip-syncing';
     duoLyrics = `Rapping with swagger: "${userTopic}! Living our best life on the top floor, unstoppable every day!"`;
+  } else {
+    // 兜底：没有任何可用的公网参考图（例如前端上传未完成）。此时只能纯文本驱动，
+    // 成片与用户无关 —— 属于异常路径，正常流程不应走到这里。
+    console.warn('[createSeedancePrediction] No usable reference image, falling back to text-only generation');
+    characterDesc = 'Two charismatic rap performers standing side-by-side in the same frame as a viral rap duo';
+    duoAction = 'Both performers vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, delivering an electrifying rap duet with synchronized lip-syncing';
+    duoLyrics = `Both performers shout together into the mic: "${userTopic}! Tag team legends running the game!"`;
   }
 
   const promptText = `${characterDesc} ${stageDesc}. ${duoAction}. ${duoLyrics}. Cinematic music video camera movements, vivid studio lighting, crisp punchy 808 bass, synchronized rap vocals and beats.`;
@@ -102,13 +119,35 @@ export async function createSeedancePrediction(
     generate_audio: true,
   };
 
-  // 注意：不传 reference_images 避免 E005 人脸深度伪造安全拦截
-  // 用户照片仅用于管理后台审计与追踪，不直接送入模型推理
+  // 关键：必须把用户上传的照片作为 reference_images 送进模型。
+  // 官方 schema 明确：reference_images 最多 9 张，用于 character consistency，
+  // 可在 prompt 中以 [Image1]、[Image2] 引用。
+  // ⚠️ reference_images 与 image / last_frame_image 互斥，不可同时传。
+  if (referenceImages.length > 0) {
+    input.reference_images = referenceImages;
+  }
 
   try {
     // 异步创建 Prediction 任务，避免 Vercel Serverless 超时截断
+    //
+    // ⚠️ 走「官方模型名」而不是硬编码 64 位 version 哈希。
+    // Replicate 官方文档：`version` 字段接受 `{owner}/{model}` 形式，**仅对 official model 有效**；
+    // SDK 中直接传 `model` 则调用 POST /models/{model}/predictions，即「跑该模型的最新版本」。
+    //
+    // 原先硬编码的 version 哈希（4c173327…）版本年代不明，若它早于 reference_images
+    // 参数上线，传进去的参考图会被静默忽略或直接 422 —— 表现正是「成片和上传的照片毫无关系」。
+    //
+    // 如需锁定版本复现历史行为，设置环境变量 SEEDANCE_MODEL_VERSION=<64位哈希>。
+    const SEEDANCE_MODEL = 'bytedance/seedance-2.0-mini';
+    const pinnedVersion = process.env.SEEDANCE_MODEL_VERSION;
+
+    console.log(
+      `[createSeedancePrediction] model=${pinnedVersion ? `pinned:${pinnedVersion.slice(0, 12)}` : SEEDANCE_MODEL} ` +
+        `input_keys=[${Object.keys(input).join(', ')}] reference_images=${(input.reference_images || []).length}`
+    );
+
     const prediction: any = await client.predictions.create({
-      version: '4c173327636db3074d6de60bba57122e4a3ed73c32732132442fe569f8db5d6e',
+      ...(pinnedVersion ? { version: pinnedVersion } : { model: SEEDANCE_MODEL }),
       input,
     });
 

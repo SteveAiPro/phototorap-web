@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { ImagePlus, Check, ChevronDown, Coins, Mic, Sparkles, X, Disc, Loader2, Music, Radio } from 'lucide-react';
 import { trackGenerateClick, trackPreviewReady } from '@/lib/analytics';
+import { downscaleForModel } from '@/lib/imagePrep';
 
 interface Stage {
   id: string;
@@ -62,11 +63,14 @@ export default function GeneratorCard() {
   const [isUploading1, setIsUploading1] = useState(false);
   const [isUploading2, setIsUploading2] = useState(false);
 
-  // 上传图片至 Supabase Storage 获取公网 URL 供 AI 渲染与后台查看
+  // 上传图片至 Cloudflare R2 / Supabase Storage，获取公网 URL 供 AI 渲染与后台查看
   const uploadImageFile = async (file: File): Promise<string | null> => {
     try {
+      // 送模型前先归一化：宽 > 900px 会触发 Seedance E005 输入校验拒绝，
+      // 而手机原图普遍 3000~4000px 宽，正是 E005 的首要触发因素。
+      const prepared = await downscaleForModel(file);
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', prepared);
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
