@@ -12,4 +12,10 @@ out
 *.log
 waffo_private.pem
 
+# TypeScript 增量编译产物
+*.tsbuildinfo
+
 .env*
+
+# 例外：环境变量模板必须入库，方便协作者知道需要配哪些变量
+!.env.example
