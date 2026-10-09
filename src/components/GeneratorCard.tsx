@@ -5,7 +5,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { ImagePlus, Check, ChevronDown, Coins, Mic, Sparkles, X, Disc, Loader2, Music, Radio } from 'lucide-react';
 import { trackGenerateClick, trackPreviewReady } from '@/lib/analytics';
-import { downscaleForModel } from '@/lib/imagePrep';
+import {
+  prepareImageForModel,
+  isReferenceSizeUsable,
+  MIN_REFERENCE_SIDE,
+} from '@/lib/imagePrep';
 
 interface Stage {
   id: string;
@@ -64,25 +68,39 @@ export default function GeneratorCard() {
   const [isUploading2, setIsUploading2] = useState(false);
 
   // 上传图片至 Cloudflare R2 / Supabase Storage，获取公网 URL 供 AI 渲染与后台查看
-  const uploadImageFile = async (file: File): Promise<string | null> => {
+  type UploadResult = { url: string } | { error: string };
+
+  const uploadImageFile = async (file: File): Promise<UploadResult> => {
     try {
-      // 送模型前先归一化：宽 > 900px 会触发 Seedance E005 输入校验拒绝，
-      // 而手机原图普遍 3000~4000px 宽，正是 E005 的首要触发因素。
-      const prepared = await downscaleForModel(file);
+      // 1) 读取尺寸并按需压到 E005 安全区间（宽 > 900px 会触发输入校验拒绝）
+      const prepared = await prepareImageForModel(file);
+
+      // 2) 最小尺寸校验：参考图太小 → 模型拿不到人脸细节 → 出片不像本人。
+      //    拦在上传前，避免用户白等一次生成。解码失败（尺寸为 0）时放行。
+      if (!isReferenceSizeUsable(prepared.width, prepared.height)) {
+        return {
+          error:
+            `This photo is too small (${prepared.width}×${prepared.height}). ` +
+            `Please use a photo at least ${MIN_REFERENCE_SIDE}px on the shorter side, ` +
+            `otherwise the AI can't capture your face clearly.`,
+        };
+      }
+
       const formData = new FormData();
-      formData.append('file', prepared);
+      formData.append('file', prepared.file);
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
       const data = await res.json();
       if (data.success && data.url) {
-        return data.url;
+        return { url: data.url };
       }
+      return { error: data.error || 'Upload failed. Please try again.' };
     } catch (e) {
       console.error('Failed to upload image', e);
+      return { error: 'Upload failed. Please try again.' };
     }
-    return null;
   };
 
   // Stage selection
@@ -345,12 +363,18 @@ export default function GeneratorCard() {
                   // 先设置本地预览给用户极速视觉反馈
                   setPhoto1(URL.createObjectURL(file));
                   setIsUploading1(true);
-                  const remoteUrl = await uploadImageFile(file);
-                  if (remoteUrl) {
-                    setPhoto1(remoteUrl);
+                  const result = await uploadImageFile(file);
+                  if ('url' in result) {
+                    setPhoto1(result.url);
+                  } else {
+                    // 尺寸不合格或上传失败：清掉预览，避免用户误以为已就绪
+                    setPhoto1(null);
+                    alert(result.error);
                   }
                   setIsUploading1(false);
                 }
+                // 清空 input，否则再次选择同一张图不会触发 change
+                e.target.value = '';
               }}
             />
             {isUploading1 ? (
@@ -388,12 +412,16 @@ export default function GeneratorCard() {
                   if (file) {
                     setPhoto2(URL.createObjectURL(file));
                     setIsUploading2(true);
-                    const remoteUrl = await uploadImageFile(file);
-                    if (remoteUrl) {
-                      setPhoto2(remoteUrl);
+                    const result = await uploadImageFile(file);
+                    if ('url' in result) {
+                      setPhoto2(result.url);
+                    } else {
+                      setPhoto2(null);
+                      alert(result.error);
                     }
                     setIsUploading2(false);
                   }
+                  e.target.value = '';
                 }}
               />
               {isUploading2 ? (

@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { readImageSize } from '@/lib/imageMeta';
-
-/** 超过这个宽度会触发 Seedance E005 输入校验拒绝（见 src/lib/imagePrep.ts） */
-const SEEDANCE_MAX_INPUT_WIDTH = 900;
+import { SEEDANCE_MAX_INPUT_WIDTH, MIN_REFERENCE_SIDE } from '@/lib/imagePrep';
 
 export async function POST(req: Request) {
   try {
@@ -25,9 +23,31 @@ export async function POST(req: Request) {
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     const filePath = `user_uploads/${fileName}`;
 
+    const size = readImageSize(buffer);
+
+    // 最小尺寸拦截：参考图太小 → 模型拿不到人脸细节 → 出片不像本人。
+    // 在写入存储之前就拦下，避免把不可用的图存进桶里、也避免用户白等一次生成。
+    // 前端已做同样校验，这里是防绕过（直连 API）的权威判定。
+    if (size && Math.min(size.width, size.height) < MIN_REFERENCE_SIDE) {
+      console.warn(
+        `[api/upload] Reference image too small: ${size.width}x${size.height} (${size.format}) — 短边低于 ${MIN_REFERENCE_SIDE}px，已拒绝。`
+      );
+      return NextResponse.json(
+        {
+          error:
+            `This photo is too small (${size.width}×${size.height}). ` +
+            `Please use a photo at least ${MIN_REFERENCE_SIDE}px on the shorter side, ` +
+            `otherwise the AI can't capture your face clearly.`,
+          code: 'IMAGE_TOO_SMALL',
+          width: size.width,
+          height: size.height,
+        },
+        { status: 422 }
+      );
+    }
+
     // 观测：这张图送进 Seedance 会不会因尺寸被 E005 拒绝。
     // 前端已做归一化，这里出现超宽说明请求绕过了前端（直连 API），仅告警不阻断。
-    const size = readImageSize(buffer);
     if (size && size.width > SEEDANCE_MAX_INPUT_WIDTH) {
       console.warn(
         `[api/upload] Oversized reference image: ${size.width}x${size.height} (${size.format}) at ${filePath} — 宽度超过 ${SEEDANCE_MAX_INPUT_WIDTH}px 会触发 Seedance E005，请确认前端归一化是否生效。`

@@ -1,34 +1,59 @@
 /**
- * Seedance 输入图归一化（规避 ByteDance E005 "flagged as sensitive"）
+ * Seedance 参考图归一化 + 最小尺寸校验
  *
- * 背景：bytedance/seedance-2.0-mini 的 E005 绝大多数不是内容问题，而是
- * **输入参考图分辨率过高**——宽度超过约 900px 会在输入校验阶段（20~52ms 内）
- * 直接被拒，根本进不到生成环节。手机原图普遍 3000~4000px 宽，正好全部命中。
+ * ⚠️ 结论更正（2026-10-09 实测）：E005 的主因**不是**分辨率，而是**图片内容
+ * （真人脸）**。曾把失败归因于"输入图过大"，已用线上数据推翻——43 次带参考图的
+ * 失败记录里，全部 36 张唯一图片宽度介于 243~768px，无一超过 900px 阈值。
  *
- * 实测结论（对 bytedance/seedance-2.0-mini）：
- *   - 触发上限：输入图宽 > ~900px
- *   - 安全目标：压到 768px 宽（绝对宽度，不是按比例缩放）
- *   - 编码：JPEG quality 90
- *   - 保持原图不动，只把送模型的副本变小
+ * 但下面两件事仍然要做，只是目的不同：
  *
- * 这是恢复 reference_images 传参的前置条件：不先解决 E005，把用户照片送进模型
- * 会 100% 失败，只能退化成"纯文本生成"——也就是生成与用户完全无关的视频。
+ * 1. 上限归一化（防另一类 E005）：宽度 > ~900px 确实会触发输入校验拒绝，
+ *    手机原图普遍 3000~4000px，压到 768px 宽 + JPEG q90 可排除这个变量。
+ *
+ * 2. 下限校验（防出片不像本人）：参考图太小，模型拿不到足够人脸细节，
+ *    生成结果与本人相似度极差。实测用户传过 243×498 的照片，即便能过审也出不了
+ *    可用成片。短边低于 MIN_REFERENCE_SIDE 直接拦在上传前。
  */
 
-/** 超过这个宽度就会触发 E005 输入校验拒绝 */
+/** 超过这个宽度会触发 E005 输入校验拒绝 */
 export const SEEDANCE_MAX_INPUT_WIDTH = 900;
 /** 实测安全的绝对目标宽度 */
 export const SEEDANCE_SAFE_INPUT_WIDTH = 768;
-const JPEG_QUALITY = 0.9;
 
 /**
- * 把待送模型的图片压到安全尺寸。返回 File / Blob，失败时原样返回。
+ * 参考图短边最小像素。低于此值无法提供足够人脸细节。
+ *
+ * 取值依据：产品输出为 480p 竖版（约 480×854），参考图短边应与输出宽度同量级。
+ * 实测用户上传样本中 243 / 377 明显不可用，443 以上尚可，故取 400 为分界。
+ */
+export const MIN_REFERENCE_SIDE = 400;
+
+const JPEG_QUALITY = 0.9;
+
+export interface PreparedImage {
+  /** 待上传的文件（已按需压缩；未压缩时即原文件） */
+  file: File | Blob;
+  /** 原始像素宽度；无法解码时为 0 */
+  width: number;
+  /** 原始像素高度；无法解码时为 0 */
+  height: number;
+  /** 是否发生了压缩 */
+  resized: boolean;
+}
+
+/**
+ * 读取图片原始尺寸，并按需压缩到 E005 安全区间。
+ *
+ * 返回原始尺寸供调用方做最小尺寸校验。解码失败时 width/height 为 0，
+ * 调用方应视为"未知"放行——不要因为解码失败就阻断用户。
  * 仅在浏览器端生效（依赖 canvas）；服务端或异常情况下直接透传。
  */
-export async function downscaleForModel(file: File): Promise<File | Blob> {
-  if (!file.type.startsWith('image/')) return file;
+export async function prepareImageForModel(file: File): Promise<PreparedImage> {
+  const passthrough: PreparedImage = { file, width: 0, height: 0, resized: false };
+
+  if (!file.type.startsWith('image/')) return passthrough;
   if (typeof document === 'undefined' || typeof createImageBitmap !== 'function') {
-    return file;
+    return passthrough;
   }
 
   try {
@@ -40,7 +65,7 @@ export async function downscaleForModel(file: File): Promise<File | Blob> {
     // 未超过触发阈值：不重编码，保留原始画质
     if (width <= SEEDANCE_MAX_INPUT_WIDTH) {
       bitmap.close?.();
-      return file;
+      return { file, width, height, resized: false };
     }
 
     const targetWidth = SEEDANCE_SAFE_INPUT_WIDTH;
@@ -53,7 +78,7 @@ export async function downscaleForModel(file: File): Promise<File | Blob> {
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       bitmap.close?.();
-      return file;
+      return { file, width, height, resized: false };
     }
 
     ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
@@ -62,15 +87,24 @@ export async function downscaleForModel(file: File): Promise<File | Blob> {
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY)
     );
-    if (!blob) return file;
+    if (!blob) return { file, width, height, resized: false };
 
     const baseName = file.name.replace(/\.[^.]+$/, '') || 'photo';
-    console.log(
-      `[imagePrep] ${width}x${height} -> ${targetWidth}x${targetHeight} (E005 安全尺寸)`
-    );
-    return new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' });
+    console.log(`[imagePrep] ${width}x${height} -> ${targetWidth}x${targetHeight} (E005 安全尺寸)`);
+    return {
+      file: new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' }),
+      width,
+      height,
+      resized: true,
+    };
   } catch (err) {
-    console.warn('[imagePrep] downscale failed, sending original file:', err);
-    return file;
+    console.warn('[imagePrep] prepare failed, sending original file:', err);
+    return passthrough;
   }
+}
+
+/** 短边是否达到可用下限。width/height 为 0（解码失败）时返回 true 放行。 */
+export function isReferenceSizeUsable(width: number, height: number): boolean {
+  if (!width || !height) return true;
+  return Math.min(width, height) >= MIN_REFERENCE_SIDE;
 }
