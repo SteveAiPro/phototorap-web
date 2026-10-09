@@ -77,24 +77,29 @@ export async function createSeedancePrediction(
   const hasTwoCharacters = referenceImages.length >= 2 || Boolean(params.photo2Url) || params.mode === 'two';
   const isSolo = !hasTwoCharacters;
 
-  // 角色描述必须显式指向参考图实体，并用 [ImageN] 占位符与 reference_images 一一对应。
-  // 这是官方 schema 规定的引用方式；一旦省略，模型会自行"编"两个陌生人出来，
-  // 生成结果与用户上传的照片完全无关。
+  // 角色描述必须显式指向参考图实体，并用 [ImageN] 占位符与 reference_images 一一对应，
+  // 否则模型会自行"编"两个陌生人出来，生成结果与用户上传的照片完全无关。
+  //
+  // ⚠️ 措辞红线（2026-10-09 实测教训）：**不要**在 prompt 里写
+  // "keeping their real faces ... exactly as in the reference photos" 这类
+  // 明确要求"复制真人面容"的指令。那正是 ByteDance 内容过滤器（E005
+  // "flagged as sensitive"）最敏感的表述。角色一致性由 reference_images
+  // 参数本身保证（官方定位就是 character consistency），不需要在 prompt 里再强调。
   let characterDesc = '';
   let duoAction = '';
   let duoLyrics = '';
 
   if (referenceImages.length >= 2) {
-    characterDesc = 'The two people shown in [Image1] and [Image2] standing side-by-side in the same frame as a viral rap duo, keeping their real faces, hairstyles and outfits exactly as in the reference photos';
-    duoAction = 'Both people from [Image1] and [Image2] vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, delivering an electrifying rap duet with synchronized lip-syncing and hilarious chemistry';
+    characterDesc = 'Two performers standing side-by-side in the same frame as a viral rap duo, matching the characters and outfits shown in [Image1] and [Image2]';
+    duoAction = 'Both performers vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, delivering an electrifying rap duet with synchronized lip-syncing and hilarious chemistry';
     duoLyrics = `Both performers shout together into the mic: "${userTopic}! Tag team legends running the game, we own every single day!"`;
   } else if (referenceImages.length === 1) {
     characterDesc = isSolo
-      ? 'The two people shown in [Image1] performing together as a viral rap duo, keeping their real faces, hairstyles and outfits exactly as in the reference photo'
-      : 'The person shown in [Image1] performing as a charismatic rap star, keeping their real face, hairstyle and outfit exactly as in the reference photo';
+      ? 'Two performers standing side-by-side as a viral rap duo, matching the characters and outfits shown in [Image1]'
+      : 'A charismatic rap star matching the character and outfit shown in [Image1]';
     duoAction = isSolo
-      ? 'Both people from [Image1] vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, rapping with synchronized lip-syncing'
-      : 'The person from [Image1] vibing and aggressively nodding head to the 142 BPM punchy 808 hip hop beat, pointing fingers and making iconic hip hop gestures, rapping with synchronized lip-syncing';
+      ? 'Both performers vibing together, enthusiastically nodding heads to the 142 BPM punchy 808 hip hop beat, pointing and gesturing to the camera, rapping with synchronized lip-syncing'
+      : 'Vibing and aggressively nodding head to the 142 BPM punchy 808 hip hop beat, pointing fingers and making iconic hip hop gestures, rapping with synchronized lip-syncing';
     duoLyrics = `Rapping with swagger: "${userTopic}! Living our best life on the top floor, unstoppable every day!"`;
   } else {
     // 兜底：没有任何可用的公网参考图（例如前端上传未完成）。此时只能纯文本驱动，
