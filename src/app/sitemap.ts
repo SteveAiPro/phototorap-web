@@ -5,7 +5,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://phototorap.com';
   const now = new Date();
 
-  const languages = ['zh', 'es', 'fr', 'pt', 'de', 'ja', 'ko'];
+  // ⚠️ 本站目前**没有语言路由** —— /zh /es /fr /pt /de /ja /ko 全部返回 404。
+  // 多语言是客户端切换（见 src/data/translations.ts），不产生独立 URL。
+  //
+  // 因此这里既不能提交语言 URL，也不能声明 hreflang 替代版本：
+  // 那等于向 Google 提交 404 页面 + 给出矛盾的 hreflang 信号。
+  //
+  // 实测证据（2026-10-11）：
+  //   - 旧 sitemap 共 28 个 URL，其中 7 个是语言路由，curl 实测全部 404
+  //   - GSC「网页索引编制」报告：/fr /ko /de 被判为「未找到 (404)」，
+  //     /es /ja /pt 落入「已发现 - 尚未编入索引」（Google 从未抓取）
+  //   - 首页 HTML 无任何 hreflang 标签，但 sitemap 却声明了 8 个语言替代版本
+  //
+  // 若日后实现真正的 i18n 路由（Next.js 多语言路由 + 每语言静态生成），
+  // 再在此恢复语言 URL 与 alternates.languages，并在各页面加互指的 hreflang。
 
   // Static core routes
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -14,18 +27,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'daily',
       priority: 1.0,
-      alternates: {
-        languages: {
-          en: baseUrl,
-          zh: `${baseUrl}/zh`,
-          es: `${baseUrl}/es`,
-          fr: `${baseUrl}/fr`,
-          pt: `${baseUrl}/pt`,
-          de: `${baseUrl}/de`,
-          ja: `${baseUrl}/ja`,
-          ko: `${baseUrl}/ko`,
-        },
-      },
     },
     {
       url: `${baseUrl}/hotel-lobby-ai`,
@@ -71,14 +72,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // Language versions of home
-  const langRoutes: MetadataRoute.Sitemap = languages.map((lang) => ({
-    url: `${baseUrl}/${lang}`,
-    lastModified: now,
-    changeFrequency: 'daily',
-    priority: 0.95,
-  }));
-
   // Guide detail pages
   const guideRoutes: MetadataRoute.Sitemap = GUIDES.map((guide) => ({
     url: `${baseUrl}/guides/${guide.slug}`,
@@ -87,5 +80,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...langRoutes, ...guideRoutes];
+  return [...staticRoutes, ...guideRoutes];
 }
