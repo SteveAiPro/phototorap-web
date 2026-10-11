@@ -1,29 +1,86 @@
 import { NextResponse } from 'next/server';
 import { getReplicatePrediction } from '@/lib/replicate';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { deductCredits } from '@/lib/credits';
+import { addCredits, getCredits } from '@/lib/credits';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+/**
+ * 生成任务状态查询。
+ *
+ * 计费模型：**创建时预扣、失败时退款**（见 /api/generate）。
+ * 所以本接口**不再扣费**，只做三件事：读 job 行 → 轮询 Replicate → 交付或退款。
+ *
+ * 关键设计：所有金额与生成参数都从服务端 job 行（video_generations）读取，
+ * 完全不信任 query 参数。此前：
+ *   - 金额按 query 里的 `model` 现算 → 用 flagship 生成、传 standard 轮询就能少扣钱
+ *   - 没有幂等保护 → 成功后重复轮询会重复扣费、重复插入记录
+ */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const predictionId = searchParams.get('id');
+    const jobId = searchParams.get('jobId');
     const userId = searchParams.get('userId');
-    const stage = searchParams.get('stage') || 'hotel-lobby';
-    const topic = searchParams.get('topic') || 'Custom Rap Freestyle';
-    const photo1 = searchParams.get('photo1');
-    const photo2 = searchParams.get('photo2');
-    const modelTier = searchParams.get('model') || 'standard';
+    const predictionIdParam = searchParams.get('id');
 
-    if (!predictionId) {
-      return NextResponse.json({ error: 'Missing prediction id' }, { status: 400 });
+    if (!jobId) {
+      return NextResponse.json({ error: 'Missing jobId' }, { status: 400 });
     }
 
+    const admin = getSupabaseAdmin();
+    if (!admin) {
+      return NextResponse.json({ error: 'Supabase admin not configured' }, { status: 500 });
+    }
+
+    // 1) 从 job 行取服务端真相
+    const { data: job } = await admin
+      .from('video_generations')
+      .select('id, user_id, stage, audio_beat, lyrics_topic, status, video_url, cost_credits')
+      .eq('id', jobId)
+      .maybeSingle();
+
+    if (!job) {
+      return NextResponse.json({ error: 'Unknown job' }, { status: 404 });
+    }
+    if (userId && job.user_id !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    let meta: any = {};
+    try {
+      meta = JSON.parse(job.lyrics_topic || '{}');
+    } catch {}
+
+    const predictionId = meta.predictionId || predictionIdParam;
+    if (!predictionId) {
+      return NextResponse.json({ error: 'Job has no prediction id' }, { status: 500 });
+    }
+
+    const topic = meta.topic || 'Custom Rap Freestyle';
+    const reserved = Number(meta.reserved) || Number(job.cost_credits) || 0;
+
+    // 2) 幂等：终态直接返回上次结果，绝不重复退款、重复记账
+    if (job.status === 'completed') {
+      return NextResponse.json({
+        success: true,
+        status: 'completed',
+        videoUrl: job.video_url,
+        lyrics: `Dropping beats for ${topic}, two legends in the frame!`,
+      });
+    }
+    if (job.status === 'failed') {
+      return NextResponse.json({
+        success: false,
+        status: 'failed',
+        code: 'REFUNDED',
+        error: 'This generation failed and your credits have been refunded.',
+      });
+    }
+
+    // 3) 轮询 Replicate
     const prediction = await getReplicatePrediction(predictionId);
 
-    // 如果任务仍在进行中 (starting / processing)
     if (prediction.status === 'starting' || prediction.status === 'processing') {
       return NextResponse.json({
         success: true,
@@ -32,158 +89,132 @@ export async function GET(req: Request) {
       });
     }
 
-    // 如果任务失败 (failed / canceled)
+    // 4) 失败 / 取消 → 退款（预扣发生在 /api/generate，这里把钱还回去）
     if (prediction.status === 'failed' || prediction.status === 'canceled') {
       const rawError = prediction.error || '';
-      // ByteDance 侧的内容过滤（E005）与"生成失败"是两回事，处理方式完全不同：
-      // E005 的触发源是**输入参考图**（分辨率过高，或人脸特写取景），
-      // 换词重写 prompt 没有任何用，必须换图。
+      // ByteDance 的内容过滤（E005）与普通生成失败是两回事，提示文案要分开：
+      // E005 的触发源是**输入参考图**（人脸特写等），换词重写 prompt 没用，必须换图。
       const isInputFlagged = /E005|flagged as sensitive|content moderation|sensitive/i.test(rawError);
 
       if (isInputFlagged) {
         console.warn('[api/generate/status] Seedance E005 input flagged:', rawError);
       }
 
+      if (reserved > 0) {
+        await addCredits(
+          job.user_id,
+          reserved,
+          'refund',
+          `refund_${predictionId}`,
+          'Auto refund: generation failed'
+        );
+        console.log(`[api/generate/status] Refunded ${reserved} credits for failed job ${job.id}`);
+      }
+
+      await admin
+        .from('video_generations')
+        .update({ status: 'failed', cost_credits: 0 })
+        .eq('id', job.id);
+
+      const balance = await getCredits(job.user_id);
+
       return NextResponse.json({
         success: false,
         status: prediction.status,
         code: isInputFlagged ? 'E005_INPUT_FLAGGED' : 'GENERATION_FAILED',
+        refunded: reserved,
+        remainingCredits: balance,
         error: isInputFlagged
-          ? 'The AI safety filter rejected one of your photos. No credits were deducted. Please retry with a waist-up or full-body photo — a tight close-up selfie is the most common trigger.'
-          : rawError || 'AI Video rendering failed. No credits were deducted.',
+          ? 'The AI safety filter rejected one of your photos. Your credits were refunded. Please retry with a waist-up or full-body photo — a tight close-up selfie is the most common trigger.'
+          : rawError || 'AI video rendering failed. Your credits were refunded.',
       });
     }
 
-    // 如果任务成功 (succeeded)，处理持久化与扣款
-    let finalVideoUrl = prediction.videoUrl || '';
-
-    if (finalVideoUrl && finalVideoUrl.startsWith('http')) {
-      const admin = getSupabaseAdmin();
-
-      // 1. 流式转存至永久存储
-      //    优先级：Cloudflare R2（零出网费 + Anycast CDN） → Supabase Storage 公开桶
-      //    ⚠️ 绝不能把 Replicate 的临时地址当最终地址返回：它 1 小时后就被物理删除，
-      //    用户会拿到一个打不开的视频链接。
-      try {
-        console.log('[api/generate/status] Persisting video to permanent storage...', finalVideoUrl);
-        const vidResp = await fetch(finalVideoUrl);
-        if (vidResp.ok) {
-          const vidBuffer = Buffer.from(await vidResp.arrayBuffer());
-          const fileName = `rap_${Date.now()}_${Math.random().toString(36).substring(7)}.mp4`;
-          const filePath = `generated_videos/${fileName}`;
-
-          // 1a. 首选 Cloudflare R2
-          try {
-            const { uploadToR2 } = await import('@/lib/r2');
-            const r2Url = await uploadToR2(filePath, vidBuffer, 'video/mp4');
-            console.log('[api/generate/status] Successfully saved to R2:', r2Url);
-            finalVideoUrl = r2Url;
-          } catch (r2Err) {
-            console.warn('[api/generate/status] R2 upload error, falling back to Supabase:', r2Err);
-          }
-
-          // 1b. Supabase Storage：既是备份，也是 R2 不可用时的最终 URL 来源
-          if (admin) {
-            try {
-              const { error: uploadErr } = await admin.storage
-                .from('uploads')
-                .upload(filePath, vidBuffer, { contentType: 'video/mp4', upsert: true });
-
-              if (!uploadErr) {
-                // 只有当 R2 没接管时，才把最终地址切到 Supabase 公网地址
-                const isStillOnTempUrl = finalVideoUrl === prediction.videoUrl;
-                if (isStillOnTempUrl) {
-                  const { data: publicData } = admin.storage.from('uploads').getPublicUrl(filePath);
-                  if (publicData?.publicUrl) {
-                    finalVideoUrl = publicData.publicUrl;
-                    console.log('[api/generate/status] Using Supabase Storage URL:', finalVideoUrl);
-                  }
-                }
-              } else {
-                console.warn('[api/generate/status] Supabase backup failed:', uploadErr.message);
-              }
-            } catch (sbErr) {
-              console.warn('[api/generate/status] Supabase backup error:', sbErr);
-            }
-          }
-
-          // 1c. 两条持久化路径都失败 —— 明确告警，别让用户拿到 1 小时后失效的链接
-          if (finalVideoUrl === prediction.videoUrl) {
-            console.error(
-              '[api/generate/status] ⚠️ Video NOT persisted to permanent storage. ' +
-                'Returned URL is a Replicate temp URL and will expire in ~1 hour.',
-              { predictionId, filePath }
-            );
-          }
-        }
-      } catch (err) {
-        console.error('[api/generate/status] Error saving video stream:', err);
-      }
-
-      // 2. 扣除积分与记录数据库 (只有真正拿到成片才扣)
-      const modelCreditsMap: Record<string, number> = {
-        standard: 10,
-        fast: 17,
-        pro: 20,
-        flagship: 37,
-      };
-      const creditsCost = modelCreditsMap[modelTier] || 10;
-      let remainingCredits: number | null = null;
-
-      if (admin && userId && !userId.startsWith('usr_')) {
-        remainingCredits = await deductCredits(
-          userId,
-          creditsCost,
-          `Generated 5s rap video (${stage})`
+    // 5) 成功 → 转存永久存储 → 标记完成（**不再扣费**，创建时已预扣）
+    const tempUrl = prediction.videoUrl || '';
+    if (!tempUrl.startsWith('http')) {
+      // 成功却拿不到输出：同样退款，不能让用户白付
+      if (reserved > 0) {
+        await addCredits(
+          job.user_id,
+          reserved,
+          'refund',
+          `refund_${predictionId}`,
+          'Auto refund: no output returned'
         );
+      }
+      await admin
+        .from('video_generations')
+        .update({ status: 'failed', cost_credits: 0 })
+        .eq('id', job.id);
+      return NextResponse.json({
+        success: false,
+        status: 'failed',
+        code: 'REFUNDED',
+        error: 'The AI model returned no video. Your credits have been refunded.',
+      });
+    }
 
-        if (remainingCredits === null) {
-          // 扣费失败（通常是余额不足）。视频已经生成、Replicate 那边已经真实计费，
-          // 所以仍然交付给用户，但**必须如实记账**：cost_credits 记 0。
-          // 此前无论扣费成败都记 creditsCost，导致账面上"扣了 10 分"而实际没有扣，
-          // 用户 10 积分连出多个视频也看不出来。现在 /api/generate 已加余额前置校验，
-          // 正常流程不该再走到这里。
-          console.error(
-            `[api/generate/status] Deduction FAILED for user ${userId} (cost=${creditsCost}). ` +
-              `Delivering video but recording cost_credits=0 — balance check should have blocked this.`
-          );
-        }
+    let finalVideoUrl = tempUrl;
 
-        const payloadTopic = JSON.stringify({
-          topic,
-          photo1: photo1 || null,
-          photo2: photo2 || null,
-        });
+    // 优先级：Cloudflare R2（零出网费 + Anycast CDN） → Supabase Storage 公开桶
+    // ⚠️ 绝不能把 Replicate 的临时地址当最终地址返回：它 1 小时后被物理删除。
+    try {
+      console.log('[api/generate/status] Persisting video to permanent storage...', tempUrl);
+      const vidResp = await fetch(tempUrl);
+      if (vidResp.ok) {
+        const vidBuffer = Buffer.from(await vidResp.arrayBuffer());
+        const fileName = `rap_${Date.now()}_${Math.random().toString(36).substring(7)}.mp4`;
+        const filePath = `generated_videos/${fileName}`;
 
         try {
-          await admin.from('video_generations').insert({
-            user_id: userId,
-            stage,
-            audio_beat: modelTier,
-            lyrics_topic: payloadTopic,
-            status: 'completed',
-            video_url: finalVideoUrl,
-            cost_credits: remainingCredits === null ? 0 : creditsCost,
-          });
-          console.log('[api/generate/status] Successfully recorded generation in database!');
-        } catch (insertErr) {
-          console.warn('[api/generate/status] Error recording generation:', insertErr);
+          const { uploadToR2 } = await import('@/lib/r2');
+          finalVideoUrl = await uploadToR2(filePath, vidBuffer, 'video/mp4');
+          console.log('[api/generate/status] Successfully saved to R2:', finalVideoUrl);
+        } catch (r2Err) {
+          console.warn('[api/generate/status] R2 upload error, falling back to Supabase:', r2Err);
+        }
+
+        try {
+          const { error: uploadErr } = await admin.storage
+            .from('uploads')
+            .upload(filePath, vidBuffer, { contentType: 'video/mp4', upsert: true });
+
+          if (!uploadErr && finalVideoUrl === tempUrl) {
+            const { data: publicData } = admin.storage.from('uploads').getPublicUrl(filePath);
+            if (publicData?.publicUrl) {
+              finalVideoUrl = publicData.publicUrl;
+              console.log('[api/generate/status] Using Supabase Storage URL:', finalVideoUrl);
+            }
+          }
+        } catch (sbErr) {
+          console.warn('[api/generate/status] Supabase backup error:', sbErr);
+        }
+
+        if (finalVideoUrl === tempUrl) {
+          console.error(
+            '[api/generate/status] ⚠️ Video NOT persisted to permanent storage. ' +
+              'Returned URL is a Replicate temp URL and will expire in ~1 hour.',
+            { predictionId, filePath }
+          );
         }
       }
-
-      return NextResponse.json({
-        success: true,
-        status: 'completed',
-        videoUrl: finalVideoUrl,
-        remainingCredits,
-        lyrics: `Dropping beats for ${topic}, two legends in the frame!`,
-      });
+    } catch (err) {
+      console.error('[api/generate/status] Error saving video stream:', err);
     }
 
+    await admin
+      .from('video_generations')
+      .update({ status: 'completed', video_url: finalVideoUrl, cost_credits: reserved })
+      .eq('id', job.id);
+
+    console.log(`[api/generate/status] Job ${job.id} completed (charged ${reserved} at creation)`);
+
     return NextResponse.json({
-      success: false,
-      status: 'failed',
-      error: 'No video output returned by AI model',
+      success: true,
+      status: 'completed',
+      videoUrl: finalVideoUrl,
+      lyrics: `Dropping beats for ${topic}, two legends in the frame!`,
     });
   } catch (error: any) {
     console.error('[api/generate/status] Error:', error);

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { deductCredits, getCredits } from '@/lib/credits';
+import { addCredits, deductCredits } from '@/lib/credits';
 import {
   isReplicateConfigured,
   runSeedanceVideoGeneration,
@@ -53,21 +53,38 @@ export async function POST(req: Request) {
 
     const baseCredits = modelCreditsMap[body.model] || 10;
     const is15s = body.duration === '15s';
-    const creditsDeducted = is15s ? Math.round(baseCredits * 1.3) : baseCredits;
+    // 金额只在这里算一次，作为唯一的真相来源（status 接口不再自己算，避免两处不一致）
+    const cost = is15s ? Math.round(baseCredits * 1.3) : baseCredits;
 
-    // 余额前置校验：必须放在创建 prediction **之前**。
-    // 此前没有这一步 —— 扣费只在生成完成时尝试一次，且失败不影响成片交付，
-    // 于是 10 积分能连出多个视频（线上实测已发生 4 例：注册送 10 分 → 第 1 个扣 10
-    // → 第 2 个 cost_credits 记了 10 但没有任何扣费流水）。
-    // 除了收入流失，Replicate 那边是真实计费的，这同时是一条 denial-of-wallet 通道。
-    const balance = await getCredits(userId);
-    if (balance < creditsDeducted) {
+    const admin = getSupabaseAdmin();
+    if (!admin) {
+      return NextResponse.json({ error: 'Supabase admin not configured' }, { status: 500 });
+    }
+
+    // 先回收自己遗留的僵尸任务（用户中途关页面时，预扣的积分会一直挂着）
+    await reconcileStaleJobs(admin, userId);
+
+    // ⚠️ 扣费必须在这里 —— 创建 prediction **之前**，而且必须是原子的。
+    //
+    // deduct_credits 是一条 `update ... where credits >= amount` 的条件更新，
+    // Postgres 会串行化并发请求：余额只够 1 次时，N 个并发请求里只有 1 个能成功，
+    // 其余拿不到更新行 → 抛异常 → 返回 null。**这就是堵住"并发白嫖"的关键**。
+    //
+    // 此前扣费放在生成完成时、且失败不影响成片交付，导致 10 积分能连出多个视频
+    // （线上实测 4 例）。除收入流失外，Replicate 侧是真实计费的，同时也是
+    // 一条 denial-of-wallet 通道。
+    const remaining = await deductCredits(
+      userId,
+      cost,
+      `Generated 5s rap video (${stage || 'hotel-lobby'})`
+    );
+
+    if (remaining === null) {
       return NextResponse.json(
         {
-          error: `Insufficient credits. This generation costs ${creditsDeducted} credits and your balance is ${balance}. Please top up to continue.`,
+          error: `Insufficient credits. This generation costs ${cost} credits. Please top up to continue.`,
           code: 'INSUFFICIENT_CREDITS',
-          required: creditsDeducted,
-          balance,
+          required: cost,
         },
         { status: 402 }
       );
@@ -80,6 +97,9 @@ export async function POST(req: Request) {
     // 如果已配置 REPLICATE_API_TOKEN，异步创建 ByteDance Seedance 2.0 Mini 任务并立即返回
     // 避免同步等待被 Vercel 15 秒超时无情杀掉
     if (isReplicateConfigured()) {
+      let predictionId = '';
+      let jobId: number | null = null;
+
       try {
         const { createSeedancePrediction } = await import('@/lib/replicate');
         console.log('[api/generate] Submitting async prediction to Seedance 2.0 Mini...');
@@ -93,27 +113,64 @@ export async function POST(req: Request) {
           modelTier: body.model || 'standard',
           mode: mode || (photo2 ? 'two' : 'one'),
         });
+        predictionId = pred.id;
 
-        console.log('[api/generate] Prediction created successfully with ID:', pred.id);
-        return NextResponse.json({
-          success: true,
-          async: true,
-          predictionId: pred.id,
-          status: pred.status,
-          creditsDeducted,
-        });
+        // 落 job 行：预扣金额、predictionId 与生成参数全部记在服务端。
+        // 之后 /api/generate/status 一律从这一行读，不再信任 query 参数 ——
+        // 此前 model 档位来自 query，用 flagship 生成、传 standard 轮询就能少扣钱。
+        const { data: job, error: jobErr } = await admin
+          .from('video_generations')
+          .insert({
+            user_id: userId,
+            stage: stage || 'hotel_lobby',
+            audio_beat: body.model || 'standard',
+            lyrics_topic: JSON.stringify({
+              topic,
+              photo1: photo1 || null,
+              photo2: photo2 || null,
+              predictionId: pred.id,
+              reserved: cost,
+            }),
+            status: 'processing',
+            video_url: '',
+            cost_credits: cost,
+          })
+          .select('id')
+          .single();
+
+        if (jobErr) throw new Error(jobErr.message);
+        jobId = job?.id ?? null;
+
+        console.log('[api/generate] Prediction created:', pred.id, '| job:', jobId, '| charged:', cost);
       } catch (repErr: any) {
-        console.error('[api/generate] Seedance prediction creation failed:', repErr);
+        // 绝不让用户为一次没能启动的生成付钱
+        await addCredits(
+          userId,
+          cost,
+          'refund',
+          `refund_${Date.now()}`,
+          'Auto refund: failed to start generation'
+        );
+        console.error('[api/generate] Start failed, credits refunded:', repErr);
         return NextResponse.json(
           { error: repErr?.message || 'Failed to submit generation job. Please try again.' },
           { status: 500 }
         );
       }
+
+      return NextResponse.json({
+        success: true,
+        async: true,
+        predictionId,
+        jobId,
+        status: 'starting',
+        creditsDeducted: cost,
+        remainingCredits: remaining,
+      });
     }
 
     // 如果 AI 成功生成了 Replicate Delivery 临时视频，立即自动流式转存到 Cloudflare R2 永久持久化！
     // 享受 0 出网流量费与全球 Anycast CDN 高速分发，避免 Replicate 1 小时后自动删除
-    const admin = getSupabaseAdmin();
     if (realGenerationSuccess && videoUrl && videoUrl.startsWith('http')) {
       try {
         console.log('[api/generate] Persisting Replicate video to permanent Cloudflare R2 Storage...', videoUrl);
@@ -162,74 +219,92 @@ export async function POST(req: Request) {
     }
 
     // 如果没有配置 AI 或者 AI 生成失败且是正式用户操作，绝不扣费并提示用户
-    const isMockOrGuest = !userId || userId.startsWith('usr_');
-
-    if (!realGenerationSuccess && !isMockOrGuest && isReplicateConfigured()) {
-      return NextResponse.json(
-        {
-          error: 'AI video generation is currently experiencing high load. No credits were deducted. Please try again with a clearer portrait photo.',
-        },
-        { status: 503 }
-      );
-    }
-
-    // 无论正式登录用户还是游客，只要生成成功，都全量记录到后台 video_generations 数据表！
-    let remainingCredits: number | null = null;
-
-    if (admin) {
-      // 1. 如果是正式登录用户，执行扣减积分
-      if (userId && !userId.startsWith('usr_')) {
-        remainingCredits = await deductCredits(
-          userId,
-          creditsDeducted,
-          `Generated 5s rap video (${stage || 'hotel-lobby'})`
-        );
-
-        if (remainingCredits === null) {
-          return NextResponse.json(
-            { error: 'Insufficient credits to generate video. Please top up your balance.' },
-            { status: 402 }
-          );
-        }
-      }
-
-      // 2. 全量写入 video_generations 记录（包含生成时上传的原始照片，供管理员后台与创作者实时查看与播放）
-      const recordUserId = (userId && !userId.startsWith('usr_')) ? userId : (userId || 'guest_user');
-      try {
-        const payloadTopic = JSON.stringify({
-          topic: topic || 'Custom Rap Freestyle',
-          photo1: photo1 || null,
-          photo2: photo2 || null,
-        });
-
-        await admin.from('video_generations').insert({
-          user_id: recordUserId,
-          stage: stage || 'hotel_lobby',
-          audio_beat: body.model || 'standard',
-          lyrics_topic: payloadTopic,
-          status: 'completed',
-          video_url: videoUrl,
-          cost_credits: (userId && !userId.startsWith('usr_')) ? creditsDeducted : 0,
-        });
-      } catch (insertErr) {
-        console.warn('[api/generate] Error recording video in database:', insertErr);
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      taskId,
-      status: 'completed',
-      videoUrl,
-      duration: body.duration || '12s',
-      creditsDeducted,
-      remainingCredits,
-      lyrics: topic
-        ? `Dropping beats for ${topic}, two legends in the frame, never gonna stop the fame!`
-        : 'Out here in the orange booth, trading verses, keeping it 100 with the crew!',
-    });
+    // ── 走到这里说明 Replicate 未配置（isReplicateConfigured() === false）──────
+    //
+    // 此前这里会给用户返回一个静态占位视频（/examples/*.mp4）并**照常扣积分** ——
+    // 等于收钱交付假货。现在扣费已经提前到函数开头，所以必须退款并明确报错，
+    // 绝不拿占位视频冒充成片。
+    await addCredits(
+      userId,
+      cost,
+      'refund',
+      `refund_${Date.now()}`,
+      'Auto refund: AI backend not configured'
+    );
+    console.error('[api/generate] Replicate not configured — generation unavailable, credits refunded.');
+    return NextResponse.json(
+      {
+        error: 'AI video generation is temporarily unavailable. No credits were deducted.',
+        code: 'BACKEND_UNAVAILABLE',
+      },
+      { status: 503 }
+    );
   } catch (error: any) {
     console.error('[api/generate] Generation error:', error);
     return NextResponse.json({ error: error.message || 'Generation failed' }, { status: 500 });
+  }
+}
+
+/**
+ * 回收自己遗留的僵尸任务。
+ *
+ * 用户中途关掉页面时，预扣的积分会一直挂着（既没交付也没退）。这里挑出
+ * 10 分钟前仍是 'processing' 的记录，去 Replicate 查真实状态：
+ *   - 失败/取消 → 退款并把记录标记为 failed
+ *   - 仍在跑    → 跳过，等下次
+ *   - 已成功    → 跳过（不退款；客户端正常会在轮询窗口内取回）
+ *
+ * 只查当前用户、最多 3 条，避免拖慢正常请求。
+ */
+async function reconcileStaleJobs(admin: any, userId: string) {
+  try {
+    const cutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: stale } = await admin
+      .from('video_generations')
+      .select('id, lyrics_topic, cost_credits')
+      .eq('user_id', userId)
+      .eq('status', 'processing')
+      .lt('created_at', cutoff)
+      .order('created_at', { ascending: true })
+      .limit(3);
+
+    if (!stale?.length) return;
+
+    const { getReplicatePrediction } = await import('@/lib/replicate');
+
+    for (const row of stale) {
+      let meta: any = {};
+      try {
+        meta = JSON.parse(row.lyrics_topic || '{}');
+      } catch {}
+      if (!meta.predictionId) continue;
+
+      let p: { status: string };
+      try {
+        p = await getReplicatePrediction(meta.predictionId);
+      } catch {
+        continue; // 查不到就先放着，下次再处理
+      }
+
+      if (p.status === 'starting' || p.status === 'processing' || p.status === 'succeeded') continue;
+
+      const amount = Number(meta.reserved) || Number(row.cost_credits) || 0;
+      if (amount > 0) {
+        await addCredits(
+          userId,
+          amount,
+          'refund',
+          `refund_${meta.predictionId}`,
+          'Auto refund: generation failed'
+        );
+      }
+      await admin
+        .from('video_generations')
+        .update({ status: 'failed', cost_credits: 0 })
+        .eq('id', row.id);
+      console.log(`[api/generate] Reconciled stale job ${row.id} → refunded ${amount}`);
+    }
+  } catch (err) {
+    console.warn('[api/generate] reconcileStaleJobs failed (non-fatal):', err);
   }
 }

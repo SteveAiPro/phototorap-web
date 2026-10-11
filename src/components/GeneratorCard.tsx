@@ -224,23 +224,32 @@ export default function GeneratorCard() {
 
       const data = await res.json();
       if (!data.success) {
+        // 402 = 余额不足：服务端在创建任务之前就拦截了，不会产生任何费用
+        if (typeof data.balance === 'number') setUserCredits(data.balance);
         alert(data.error || 'Generation failed');
         setIsGenerating(false);
         return;
       }
 
+      if (!data.jobId) {
+        alert('Generation could not be started. No credits were deducted.');
+        setIsGenerating(false);
+        return;
+      }
+
+      // ⚠️ 积分在**创建任务时**就已原子预扣（并发安全），所以这里必须立刻把余额
+      // 更新成服务端返回的真实值。生成失败时服务端会自动退款，轮询到失败态会再刷新一次。
+      if (typeof data.remainingCredits === 'number') {
+        setUserCredits(data.remainingCredits);
+      }
+
       // 如果后端采用异步调度模式 (Replicate Prediction ID 轮询机制)
       if (data.async && data.predictionId) {
-        const predId = data.predictionId;
-        const topicStr = topicInput || selectedOccasion;
+        // 只传 jobId + userId —— 金额、predictionId、stage/topic/photo 全部由服务端
+        // job 行提供，客户端不再有机会篡改（此前 model 档位走 query，可被改小以少扣钱）。
         const queryParams = new URLSearchParams({
-          id: predId,
+          jobId: String(data.jobId),
           userId: user.id,
-          stage: selectedStage,
-          topic: topicStr,
-          photo1: photo1 || '',
-          photo2: photo2 || '',
-          model: selectedModel,
         });
 
         // 客户端轻量轮询：每 3 秒检查一次状态，最长持续 3 分钟
@@ -268,8 +277,15 @@ export default function GeneratorCard() {
               });
             } else if (statusData.status === 'failed' || statusData.status === 'canceled') {
               clearInterval(pollInterval);
+              // 失败已由服务端自动退款，把余额刷新成退款后的真实值
+              if (typeof statusData.remainingCredits === 'number') {
+                setUserCredits(statusData.remainingCredits);
+              }
               setIsGenerating(false);
-              alert(statusData.error || 'AI generation could not complete. No credits were deducted.');
+              alert(
+                statusData.error ||
+                  'AI generation could not complete. Your credits have been refunded.'
+              );
             } else if (pollAttempts >= maxPollAttempts) {
               clearInterval(pollInterval);
               setIsGenerating(false);
