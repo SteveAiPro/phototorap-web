@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { trackSignUp, trackLogin } from '@/lib/analytics';
 
 export interface User {
   id: string;
@@ -86,6 +87,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(userData);
     localStorage.setItem('phototorap_user', JSON.stringify(userData));
+
+    // GA4：区分 sign_up（本浏览器首次见到该用户）与 login（回访）。
+    // sessionStorage 防止同 tab 生命周期内重复 fire（刷新页面不会重复计数）；
+    // localStorage 标记跨会话记住"已注册过"，从而把首次 vs 回访区分开。
+    if (typeof window !== 'undefined') {
+      const firedKey = 'pt_auth_event_fired';
+      if (!sessionStorage.getItem(firedKey)) {
+        sessionStorage.setItem(firedKey, '1');
+        const knownKey = `pt_known_user_${authUser.id}`;
+        const method =
+          (authUser.app_metadata && authUser.app_metadata.provider) ||
+          (authUser.identities && authUser.identities[0] && authUser.identities[0].provider) ||
+          'unknown';
+        if (!localStorage.getItem(knownKey)) {
+          localStorage.setItem(knownKey, '1');
+          trackSignUp({ method });
+        } else {
+          trackLogin({ method });
+        }
+      }
+    }
   };
 
   const loadLocalFallback = () => {

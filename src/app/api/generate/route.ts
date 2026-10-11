@@ -7,6 +7,7 @@ import {
   runLivePortraitVideoGeneration,
 } from '@/lib/replicate';
 import { checkPromptSafety } from '@/lib/waffo';
+import { computeCredits, normalizeDuration, normalizeResolution } from '@/lib/pricing';
 
 export async function POST(req: Request) {
   try {
@@ -44,17 +45,16 @@ export async function POST(req: Request) {
       'street-cypher': '/examples/orange-street.mp4',
     };
 
-    const modelCreditsMap: Record<string, number> = {
-      standard: 10,
-      fast: 17,
-      pro: 20,
-      flagship: 37,
-    };
-
-    const baseCredits = modelCreditsMap[body.model] || 10;
-    const is15s = body.duration === '15s';
-    // 金额只在这里算一次，作为唯一的真相来源（status 接口不再自己算，避免两处不一致）
-    const cost = is15s ? Math.round(baseCredits * 1.3) : baseCredits;
+    // 计价：只由「分辨率 + 时长」两个维度决定，公式与前端共用 pricing.ts。
+    //
+    // ⚠️ 历史问题（2026-10-11 修复）：
+    //   1. 曾按 model 档位定价（10/17/20/37），但四个档位实际调用的是**同一个模型**，
+    //      按档位收不同价格属于虚假承诺；
+    //   2. 15 秒的 1.3 倍加价在前端和后端各算了一遍，两处口径不同导致展示与实扣不一致。
+    // 现在统一为 computeCredits(resolution, duration)，这里是唯一真相来源。
+    const resolution = normalizeResolution(body.resolution);
+    const duration = normalizeDuration(body.duration);
+    const cost = computeCredits(resolution, duration);
 
     const admin = getSupabaseAdmin();
     if (!admin) {
@@ -108,7 +108,9 @@ export async function POST(req: Request) {
           photo2Url: photo2,
           stage,
           topic,
-          duration: '5s',
+          // 真正把用户选的分辨率与时长透传给模型（此前硬编码 5s + 按档位推断分辨率）
+          resolution,
+          duration,
           aspectRatio: body.aspectRatio || '9:16',
           modelTier: body.model || 'standard',
           mode: mode || (photo2 ? 'two' : 'one'),
@@ -130,6 +132,9 @@ export async function POST(req: Request) {
               photo2: photo2 || null,
               predictionId: pred.id,
               reserved: cost,
+              // 记下实际送模型的参数，便于对账（预扣金额必须与这两个值算出的价格一致）
+              resolution,
+              duration,
             }),
             status: 'processing',
             video_url: '',

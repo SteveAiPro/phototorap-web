@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { ImagePlus, Check, ChevronDown, Coins, Mic, Sparkles, X, Disc, Loader2, Music, Radio } from 'lucide-react';
-import { trackGenerateClick, trackPreviewReady } from '@/lib/analytics';
+import { trackGenerateClick, trackPreviewReady, trackGenerateSuccess } from '@/lib/analytics';
 import {
   prepareImageForModel,
   isReferenceSizeUsable,
   MIN_REFERENCE_SIDE,
 } from '@/lib/imagePrep';
+import { computeCredits, DURATIONS, RESOLUTIONS } from '@/lib/pricing';
 
 interface Stage {
   id: string;
@@ -109,8 +110,10 @@ export default function GeneratorCard() {
   // Step 3 精细状态 (完全对照截图)
   const [qualityExpanded, setQualityExpanded] = useState(true); // 默认打开可折叠抽屉
   const [selectedModel, setSelectedModel] = useState('standard');
-  const [resolution, setResolution] = useState('720p');
-  const [duration, setDuration] = useState('12s');
+  // 默认档位与实际生成参数保持一致：480p + 5s（基准档，10 积分）。
+  // 此前默认写的是 720p / 12s，与实际生成的 480p 5s 不符 —— 属于误导。
+  const [resolution, setResolution] = useState<string>('480p');
+  const [duration, setDuration] = useState<string>('5s');
   const [aspectRatio, setAspectRatio] = useState('9:16');
 
   // Occasions & Topic input
@@ -146,16 +149,19 @@ export default function GeneratorCard() {
   }, [isGenerating]);
 
   const currentModelObj = MODELS.find((m) => m.id === selectedModel) || MODELS[0];
-  
-  // Calculate credits: if duration is '15s', add 30% surcharge (rounded), otherwise base model credits
-  const calculateCredits = (baseCredits: number, dur: string) => {
-    if (dur === '15s') {
-      return Math.round(baseCredits * 1.3);
-    }
-    return baseCredits;
-  };
 
-  const requiredCredits = calculateCredits(currentModelObj.credits, duration);
+  // 积分由「分辨率 + 时长」两个维度共同决定，公式与后端共用 pricing.ts（唯一真相来源）。
+  //
+  // 改动前：按模型档位取基础分（10/17/20/37），15 秒再单独 ×1.3 并在界面上打黄色 "+30%"。
+  // 改动后：不再按时长单独加价，也不再按模型档位定价 —— 因为四个档位实际调用的是同一个模型。
+  const requiredCredits = computeCredits(resolution, duration);
+
+  // 进度条估算：所选时长不同，Seedance 出片耗时不同（经验值，单位秒）。
+  // 仅用于视觉进度，不影响实际生成 / 轮询逻辑。
+  const ESTIMATED_RENDER_SECONDS: Record<string, number> = {
+    '5s': 45, '8s': 60, '10s': 75, '12s': 90, '15s': 105,
+  };
+  const estimatedRenderSeconds = ESTIMATED_RENDER_SECONDS[duration] || 60;
 
   const occasions = [
     { key: 'birthday', label: t.generator.occasionBirthday },
@@ -213,7 +219,9 @@ export default function GeneratorCard() {
           photo2,
           stage: selectedStage,
           model: selectedModel,
-          quality: resolution,
+          // 注意：字段名必须是 resolution（后端读的是这个）。
+          // 历史上前端发的是 quality，后端根本没读 —— 分辨率选择器一直是摆设。
+          resolution,
           duration,
           aspectRatio,
           topic: topicInput || selectedOccasion,
@@ -269,6 +277,12 @@ export default function GeneratorCard() {
               }
               trackPreviewReady({
                 mode: photoMode === 'two' ? 'duo' : 'solo',
+              });
+              trackGenerateSuccess({
+                mode: photoMode === 'two' ? 'duo' : 'solo',
+                resolution,
+                duration,
+                credits: requiredCredits,
               });
               setIsGenerating(false);
               setGeneratedResult({
@@ -565,14 +579,8 @@ export default function GeneratorCard() {
                         <div className="text-xs text-gray-400 mt-0.5">
                           {m.engine}
                         </div>
-                        <div className="text-xs font-bold text-[#FF6A00] mt-1.5 flex items-center gap-1.5">
-                          <span>{calculateCredits(m.credits, duration)} {t.generator.creditsTag}</span>
-                          {duration === '15s' && (
-                            <span className="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">
-                              +30% (15s)
-                            </span>
-                          )}
-                        </div>
+                        {/* 模型档位不再显示积分：价格只由「分辨率 + 时长」决定。
+                            四个档位实际调用的是同一个模型，按档位标不同价格属于误导。 */}
                       </button>
                     );
                   })}
@@ -585,7 +593,7 @@ export default function GeneratorCard() {
                   {t.generator.resolutionSection}
                 </span>
                 <div className="flex gap-2">
-                  {['480p', '720p'].map((r) => (
+                  {RESOLUTIONS.map((r) => (
                     <button
                       key={r}
                       type="button"
@@ -608,7 +616,7 @@ export default function GeneratorCard() {
                   {t.generator.durationSection}
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {['5s', '8s', '10s', '12s', '15s'].map((d) => (
+                  {DURATIONS.map((d) => (
                     <button
                       key={d}
                       type="button"
@@ -620,13 +628,8 @@ export default function GeneratorCard() {
                       }`}
                     >
                       <span>{d}</span>
-                      {d === '15s' && (
-                        <span className={`ml-1 text-[10px] px-1 py-0.2 rounded font-mono ${
-                          duration === '15s' ? 'bg-black/20 text-black font-bold' : 'text-[#FF6A00] bg-[#FF6A00]/10'
-                        }`}>
-                          +30%
-                        </span>
-                      )}
+                      {/* 已移除黄色 "+30%" 标签：加价不再按单个时长维度体现，
+                          而是由「分辨率 + 时长」共同决定总积分（见 pricing.ts）。 */}
                     </button>
                   ))}
                 </div>
@@ -783,7 +786,7 @@ export default function GeneratorCard() {
               <div
                 className="bg-gradient-to-r from-[#FF6A00] via-[#FF8A00] to-[#FFA01A] h-2 rounded-full transition-all duration-500 ease-out"
                 style={{
-                  width: `${Math.min(95, Math.max(12, Math.round(generateElapsed * 1.3)))}%`,
+                  width: `${Math.min(96, Math.max(12, Math.round((generateElapsed / estimatedRenderSeconds) * 100)))}%`,
                 }}
               ></div>
             </div>
@@ -796,7 +799,7 @@ export default function GeneratorCard() {
                   '🔥 Writing custom rhyming rap lyrics & 142 BPM beat...',
                   '🎤 Synthesizing flow & lip-synced facial animation...',
                   '🎬 Rendering dynamic camera motions & stage lighting...',
-                  '⚡ Finalizing 720p music video master track...',
+                  `⚡ Finalizing ${resolution} music video master track...`,
                 ][generateStepIndex]}
               </p>
             </div>

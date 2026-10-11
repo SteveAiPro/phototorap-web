@@ -85,6 +85,7 @@ export function trackBeginCheckout(params: {
 export function trackPurchaseSuccess(params: {
   orderId?: string;
   planId: string;
+  planName?: string;
   priceUsd: number;
   credits: number;
 }) {
@@ -95,6 +96,7 @@ export function trackPurchaseSuccess(params: {
     items: [
       {
         item_id: params.planId,
+        item_name: params.planName || params.planId,
         price: params.priceUsd,
         quantity: 1,
       },
@@ -116,5 +118,41 @@ export function trackGuideCtaClick(params: {
     guide_slug: params.guideSlug,
     cta_text: params.ctaText,
     destination: params.destination,
+  });
+}
+
+/**
+ * 用户注册（新账号首次出现）
+ */
+export function trackSignUp(params: { method?: string }) {
+  trackEvent('sign_up', {
+    method: params.method || 'unknown',
+  });
+}
+
+/**
+ * 用户登录（回访）
+ */
+export function trackLogin(params: { method?: string }) {
+  trackEvent('login', {
+    method: params.method || 'unknown',
+  });
+}
+
+/**
+ * 生成成功（关键转化事件，此前缺失导致 GA4 关键事件数 = 0）
+ */
+export function trackGenerateSuccess(params: {
+  mode?: string;
+  resolution?: string;
+  duration?: string;
+  credits?: number;
+}) {
+  trackEvent('generate_succeeded', {
+    event_category: 'conversion',
+    mode: params.mode || 'duo',
+    resolution: params.resolution || '480p',
+    duration: params.duration || '5s',
+    credits: params.credits || 0,
   });
 }

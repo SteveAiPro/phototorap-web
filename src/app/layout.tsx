@@ -56,6 +56,9 @@ export const metadata: Metadata = {
     google: '39LvT32JAXqHe6XN0UfzabaOvk5DgT6L2MJXTsZfwWs',
     other: {
       'waffo-verify': '97cd1b4f3e87735c2dc04992075224e5',
+      // IndexNow 403 修复：把这行的值换成 Bing WMT 给的站点验证码即完成原生验证。
+      // 若已用 public/BingSiteAuth.xml 文件方式验证，此行可留占位不填。
+      'msvalidate.01': 'REPLACE_WITH_BING_VERIFICATION_CODE',
     },
   },
 };

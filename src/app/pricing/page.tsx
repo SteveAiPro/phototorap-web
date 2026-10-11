@@ -8,6 +8,14 @@ import { useAuth } from '@/context/AuthContext';
 import { Check, Sparkles, Zap, ShieldCheck } from 'lucide-react';
 import { trackBeginCheckout, trackPurchaseSuccess } from '@/lib/analytics';
 
+// 套餐价格 / 积分为可信映射（与 handleCheckout 同源），不再读取客户端可控的 URL 参数。
+// 回跳 URL 由服务端 /api/checkout 构造、已带 ?plan=，从这里取真实金额做 GA4 purchase 事件。
+const PLAN_INFO: Record<string, { name: string; priceUsd: number; credits: number }> = {
+  single: { name: 'Single Track', priceUsd: 9.99, credits: 10 },
+  pack: { name: 'Creator 5-Pack', priceUsd: 29, credits: 50 },
+  monthly: { name: 'Pro Monthly', priceUsd: 29.9, credits: 100 },
+};
+
 export default function PricingPage() {
   const { user, refreshBalance, openAuthModal } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -27,12 +35,14 @@ export default function PricingPage() {
     // URL 里的 credits 是客户端可控的，之前正是靠它调用 /api/user/record-topup
     // 直接给账号加积分——那条接口已删除。积分只能由服务端已验签的支付 webhook
     // （Waffo / Stripe）写入，前端只负责把余额刷新出来。
-    const creditsForAnalytics = Number(params.get('credits') || 0);
+    const planId = params.get('plan') || 'custom';
+    const plan = PLAN_INFO[planId] || PLAN_INFO.single;
 
     trackPurchaseSuccess({
-      planId: params.get('plan') || 'custom',
-      priceUsd: 0,
-      credits: creditsForAnalytics,
+      planId,
+      planName: plan.name,
+      priceUsd: plan.priceUsd,
+      credits: plan.credits,
     });
 
     // webhook 到达有几秒延迟，轮询几次把服务端写入的余额刷新出来，

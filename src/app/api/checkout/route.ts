@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       productId: plan.productId,
       currency: 'USD',
       buyerEmail: email || undefined,
-      successUrl: `${SITE_URL}/pricing?payment=success&credits=${plan.credits}`,
+      successUrl: `${SITE_URL}/pricing?payment=success&plan=${planId}&credits=${plan.credits}`,
       metadata: {
         userId: userId || '',
         planId: plan.id,

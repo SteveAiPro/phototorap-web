@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Bing Webmaster Tools 站点验证文件（用于修复 IndexNow 403: UserForbiddedToAccessSite）。
+
+  根因：phototorap.com 在 Bing WMT 是通过「从 Google Search Console 导入」方式添加的，
+  该方式在 Bing 侧**未做原生验证**，所以 IndexNow 提交一律被拒（同账号另一站
+  physicalaidirectory.com 用原生 XML 验证则 200）。
+
+  修复步骤：
+  1. 在 Bing Webmaster Tools → 左上站点下拉 → 目标站点的 More → Verification code
+     拿到 Bing 给的站点验证码（这步此前自动化点不动 Fluent UI 菜单，需手动点一次）。
+  2. 把下面 <apikey> 的 REPLACE_WITH_BING_VERIFICATION_CODE 换成真实验证码并部署。
+  3. Bing 即完成原生验证，postbuild 的 IndexNow 提交（scripts/auto-submit-sitemap.mjs）
+     从 403 变为 200，Bing 开始收录。
+
+  注：与 src/app/layout.tsx 的 <meta name="msvalidate.01"> 二选一即可，无需两者都填。
+-->
+<root>
+  <apikey>REPLACE_WITH_BING_VERIFICATION_CODE</apikey>
+</root>

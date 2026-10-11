@@ -1,4 +1,5 @@
 import Replicate from 'replicate';
+import { normalizeResolution, parseDurationSeconds } from './pricing';
 
 let _replicate: Replicate | null = null;
 
@@ -25,7 +26,10 @@ export interface GenerateVideoParams {
   photo2Url?: string;
   stage: string;
   topic?: string;
+  /** 时长标签，如 '5s' / '12s'。会换算成秒数传给模型 */
   duration?: string;
+  /** 分辨率，'480p' | '720p'。非法值回落 480p */
+  resolution?: string;
   aspectRatio?: string;
   modelTier?: 'standard' | 'fast' | 'pro' | 'flagship';
   mode?: 'two' | 'one';
@@ -112,9 +116,14 @@ export async function createSeedancePrediction(
 
   const promptText = `${characterDesc} ${stageDesc}. ${duoAction}. ${duoLyrics}. Cinematic music video camera movements, vivid studio lighting, crisp punchy 808 bass, synchronized rap vocals and beats.`;
 
-  // 默认锁定最省 Token 参数：480p 分辨率、5 秒短视频
-  const durationSec = 5;
-  const resolution = params.modelTier === 'pro' || params.modelTier === 'flagship' ? '720p' : '480p';
+  // 分辨率与时长由用户在 Step 3 显式选择，这里只做规范化与兜底。
+  //
+  // ⚠️ 历史问题（2026-10-11 修复）：此处曾硬编码 `duration = 5`，并按 modelTier
+  // 推断分辨率（pro/flagship → 720p）。结果是用户在界面上选 12s / 720p 完全无效，
+  // 成片永远是 480p 5s，而积分却按用户选择收取 —— 属于"收钱不交货"。
+  // 现在改为真正透传用户选择，档位规范化与计价共用 pricing.ts，保证前后端一致。
+  const resolution = normalizeResolution(params.resolution);
+  const durationSec = parseDurationSeconds(params.duration);
 
   const input: Record<string, any> = {
     prompt: promptText,
@@ -148,6 +157,7 @@ export async function createSeedancePrediction(
 
     console.log(
       `[createSeedancePrediction] model=${pinnedVersion ? `pinned:${pinnedVersion.slice(0, 12)}` : SEEDANCE_MODEL} ` +
+        `resolution=${resolution} duration=${durationSec}s aspect_ratio=${input.aspect_ratio} ` +
         `input_keys=[${Object.keys(input).join(', ')}] reference_images=${(input.reference_images || []).length}`
     );
 
