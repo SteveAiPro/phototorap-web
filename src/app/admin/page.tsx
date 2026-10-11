@@ -85,6 +85,8 @@ export default function AdminPage() {
   const [adjustReason, setAdjustReason] = useState<string>('');
   const [adjusting, setAdjusting] = useState(false);
   const [actionMsg, setActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  // 非管理员访问时置为拒绝原因，用于渲染明确的无权限页（而不是一个空白后台）
+  const [denied, setDenied] = useState<string | null>(null);
 
   useEffect(() => {
     loadOverview();
@@ -95,6 +97,15 @@ export default function AdminPage() {
       setLoading(true);
       const res = await fetch('/api/admin/overview');
       const json = await res.json();
+
+      // 服务端鉴权失败：401 未登录 / 403 非管理员 / 503 未配置管理员名单
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403 || res.status === 503) {
+          setDenied(json.error || 'You do not have access to the admin console.');
+        }
+        return;
+      }
+
       if (json.success) {
         setData(json);
       }
@@ -168,6 +179,33 @@ export default function AdminPage() {
       u.id?.toLowerCase().includes(q)
     );
   });
+
+  // 鉴权失败时不要渲染后台骨架，直接给一个明确的无权限页
+  if (denied) {
+    return (
+      <div className="min-h-screen bg-[#090A0F] text-[#F3F4F6]">
+        <Navbar />
+        <AuthModal />
+        <main className="mx-auto flex max-w-xl flex-col items-center justify-center px-4 py-32 text-center">
+          <span className="rounded-full bg-[#2A1A12] p-3 text-[#FF6A00]">
+            <ShieldCheck className="h-7 w-7" />
+          </span>
+          <h1 className="mt-5 font-display text-2xl font-black text-white">Admin access required</h1>
+          <p className="mt-3 text-sm text-gray-400">{denied}</p>
+          <p className="mt-2 text-xs text-gray-500">
+            This console is restricted to administrator accounts. If you believe this is a mistake,
+            contact the site owner.
+          </p>
+          <button
+            onClick={() => (user ? loadOverview() : openAuthModal())}
+            className="mt-6 rounded-xl bg-[#FF6A00] px-5 py-2.5 text-sm font-bold text-black hover:bg-[#ff7d1f]"
+          >
+            {user ? 'Retry' : 'Sign in'}
+          </button>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#090A0F] text-[#F3F4F6]">

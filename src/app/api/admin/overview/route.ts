@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(req: Request) {
   try {
+    // 鉴权前置：本接口会用 service role 读取全站用户（含邮箱）、流水与生成记录，
+    // 必须确认调用者是管理员，否则等于把后台数据公开。
+    const guard = await requireAdmin();
+    if (!guard.ok) {
+      return NextResponse.json({ error: guard.error }, { status: guard.status || 403 });
+    }
+
     const admin = getSupabaseAdmin();
     if (!admin) {
       return NextResponse.json({ error: 'Supabase admin not configured' }, { status: 500 });

@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { addCredits, deductCredits } from '@/lib/credits';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 鉴权前置：本接口能任意增减用户积分（等于凭空造钱），必须确认调用者是管理员。
+    const guard = await requireAdmin();
+    if (!guard.ok) {
+      return NextResponse.json({ error: guard.error }, { status: guard.status || 403 });
+    }
+
     const body = await req.json();
     const { userId, amount, reason } = body;
 
