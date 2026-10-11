@@ -19,7 +19,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   deductCredits: (amount: number) => boolean;
   setUserCredits: (credits: number) => void;
-  addCredits: (amount: number, description?: string, type?: string) => void;
+  refreshBalance: () => Promise<void>;
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
@@ -190,30 +190,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const addCredits = (amount: number, description: string = 'Waffo Credit Top Up', type: string = 'purchase') => {
-    if (!user) return;
-    const updated = { ...user, credits: user.credits + amount };
-    setUser(updated);
-    localStorage.setItem('phototorap_user', JSON.stringify(updated));
-
-    // 调用服务端高权限 API 同步更新数据库余额并写入 credit_transactions 流水
-    if (user.id && !user.id.startsWith('usr_')) {
-      fetch('/api/user/record-topup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          credits: amount,
-          description,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.balance !== undefined) {
-            setUser((prev) => (prev ? { ...prev, credits: data.balance } : prev));
-          }
-        })
-        .catch((err) => console.error('[addCredits] Sync error:', err));
+  /**
+   * 从服务端读回**自己**的真实余额。
+   *
+   * ⚠️ 客户端不再具备发放积分的能力。此前这里是 `addCredits(amount, ...)`，
+   * 会把客户端传入的积分数 POST 到 /api/user/record-topup——那个接口无鉴权、
+   * 也不校验支付，等于任何登录用户都能凭空造积分（甚至能指定任意 userId）。
+   * 现在积分只能由已验签的支付 webhook（Waffo / Stripe）写入，
+   * 前端在支付回跳后只做"刷新余额"，把 webhook 已写入的结果读回来。
+   */
+  const refreshBalance = async () => {
+    if (!user?.id || user.id.startsWith('usr_')) return;
+    try {
+      const res = await fetch('/api/user/balance', { cache: 'no-store' });
+      if (!res.ok) {
+        console.warn('[refreshBalance] Non-OK response:', res.status);
+        return;
+      }
+      const data = await res.json();
+      if (typeof data.credits === 'number') {
+        setUser((prev) => {
+          if (!prev) return prev;
+          const updated = { ...prev, credits: data.credits };
+          localStorage.setItem('phototorap_user', JSON.stringify(updated));
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error('[refreshBalance] Failed:', err);
     }
   };
 
@@ -227,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         deductCredits,
         setUserCredits,
-        addCredits,
+        refreshBalance,
         isAuthModalOpen,
         openAuthModal: () => setIsAuthModalOpen(true),
         closeAuthModal: () => setIsAuthModalOpen(false),

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { getSessionUser } from '@/lib/session';
+import { isAdminEmail } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -11,6 +13,22 @@ export async function GET(req: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 });
+    }
+
+    // 鉴权 + 越权防护（IDOR）：本接口会返回该用户的邮箱、积分流水与生成记录，
+    // 此前只凭 URL 里的 userId 就能读取任意用户的数据。现在只允许读自己，管理员例外。
+    const session = await getSessionUser();
+    if (!session.ok || !session.user) {
+      return NextResponse.json({ error: session.error }, { status: session.status || 401 });
+    }
+    if (session.user.id !== userId && !isAdminEmail(session.user.email)) {
+      console.warn(
+        '[api/user/transactions] Forbidden cross-user read:',
+        session.user.id,
+        '->',
+        userId
+      );
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const admin = getSupabaseAdmin();

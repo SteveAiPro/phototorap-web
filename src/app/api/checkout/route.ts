@@ -18,8 +18,17 @@ export async function POST(req: Request) {
 
     const waffo = getWaffoClient();
 
-    // 如果未配置 Waffo 私钥，返回模拟成功链接
+    // 未配置 Waffo 私钥时：生产环境直接报错。
+    // 此前这里会返回 mode=simulation，前端随即白送积分——等于生产环境存在
+    // "不付钱就发积分"的路径。本地开发仍允许模拟，方便调试支付后的 UI 流程。
     if (!waffo) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('[api/checkout] Waffo client not configured — checkout disabled in production.');
+        return NextResponse.json(
+          { error: 'Payment is temporarily unavailable. Please try again later.' },
+          { status: 503 }
+        );
+      }
       return NextResponse.json({
         success: true,
         mode: 'simulation',

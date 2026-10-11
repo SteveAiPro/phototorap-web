@@ -9,26 +9,35 @@ import { Check, Sparkles, Zap, ShieldCheck } from 'lucide-react';
 import { trackBeginCheckout, trackPurchaseSuccess } from '@/lib/analytics';
 
 export default function PricingPage() {
-  const { user, addCredits, openAuthModal } = useAuth();
+  const { user, refreshBalance, openAuthModal } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   // 监听从 Waffo / Stripe 返回的支付成功重定向 (?payment=success&credits=10)
+  const handledPaymentRef = React.useRef(false);
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || handledPaymentRef.current) return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get('payment') === 'success') {
-      const creditsToAdd = Number(params.get('credits') || 10);
-      addCredits(creditsToAdd, `Waffo Package Top-Up (+${creditsToAdd} Credits)`, 'purchase');
-      trackPurchaseSuccess({
-        planId: params.get('plan') || 'custom',
-        priceUsd: creditsToAdd === 50 ? 29 : creditsToAdd === 100 ? 29.9 : 9.99,
-        credits: creditsToAdd,
-      });
-      alert(`🎉 Payment Successful! ${creditsToAdd} Credits added to your account.`);
-      // 清除 URL 查询参数避免重复触发
-      window.history.replaceState({}, '', '/pricing');
-    }
-  }, [addCredits]);
+    if (params.get('payment') !== 'success') return;
+
+    handledPaymentRef.current = true;
+    // 先清 URL 参数，避免刷新页面重复触发
+    window.history.replaceState({}, '', '/pricing');
+
+    // ⚠️ 这里**绝不发放积分**。
+    // URL 里的 credits 是客户端可控的，之前正是靠它调用 /api/user/record-topup
+    // 直接给账号加积分——那条接口已删除。积分只能由服务端已验签的支付 webhook
+    // （Waffo / Stripe）写入，前端只负责把余额刷新出来。
+    const creditsForAnalytics = Number(params.get('credits') || 0);
+
+    trackPurchaseSuccess({
+      planId: params.get('plan') || 'custom',
+      priceUsd: 0,
+      credits: creditsForAnalytics,
+    });
+
+    refreshBalance();
+    alert('Payment received! Your credits will appear in a few seconds.');
+  }, [refreshBalance]);
 
   const handleCheckout = async (planId: string, credits: number) => {
     if (!user) {
@@ -55,21 +64,15 @@ export default function PricingPage() {
       });
       const data = await res.json();
       const checkoutUrl = data.checkoutUrl || data.url;
-      if (checkoutUrl && !checkoutUrl.startsWith('/pricing?payment=simulation')) {
+      if (checkoutUrl) {
         // Waffo 官方集成关键规则：新标签页打开收银台，保留主站上下文
         window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
-      } else if (data.success && data.mode === 'simulation') {
-        // 模拟模式直接充值
-        addCredits(credits);
-        trackPurchaseSuccess({
-          planId,
-          priceUsd,
-          credits,
-        });
-        alert(`🎉 Payment Successful! ${credits} Credits added to your account.`);
       } else if (data.error) {
         alert(data.error);
       }
+      // 注意：这里**不再有"模拟模式直接充值"的分支**。
+      // 此前当 Waffo 未配置时，/api/checkout 会返回 mode=simulation，
+      // 前端随即调用 addCredits 白送积分——生产环境绝不允许存在这条路。
     } catch (e) {
       alert('Checkout error');
     } finally {
