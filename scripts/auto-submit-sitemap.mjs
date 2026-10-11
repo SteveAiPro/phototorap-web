@@ -5,15 +5,12 @@ const key = '3a598e916a2d48bfbcba89f0e15c3e09';
 const keyLocation = `https://${host}/${key}.txt`;
 
 // List of all essential indexed URLs
+//
+// ⚠️ 不要再加入语言 URL（/zh /es /fr /pt /de /ja /ko）：
+// 本站没有语言路由，这些 URL 全部返回 404（实测 2026-10-11）。
+// 向 IndexNow 提交 404 页面会污染提交质量，也可能导致整批被拒。
 const urlList = [
   `https://${host}`,
-  `https://${host}/zh`,
-  `https://${host}/es`,
-  `https://${host}/fr`,
-  `https://${host}/pt`,
-  `https://${host}/de`,
-  `https://${host}/ja`,
-  `https://${host}/ko`,
   `https://${host}/hotel-lobby-ai`,
   `https://${host}/pricing`,
   `https://${host}/guides`,
