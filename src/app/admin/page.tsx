@@ -180,6 +180,9 @@ export default function AdminPage() {
     );
   });
 
+  // 把 user_id 映射到 email，供流水 / 视频表用邮箱分辨用户（UUID 难认）
+  const userIdToEmail = new Map((data?.users || []).map((u) => [u.id, u.email]));
+
   // 鉴权失败时不要渲染后台骨架，直接给一个明确的无权限页
   if (denied) {
     return (
@@ -351,7 +354,7 @@ export default function AdminPage() {
                 <thead className="border-b border-[#222533] bg-[#0E1017] text-gray-400 font-bold">
                   <tr>
                     <th className="p-4">User</th>
-                    <th className="p-4">User ID</th>
+                    <th className="p-4">Email</th>
                     <th className="p-4">Credits Balance</th>
                     <th className="p-4">Registered At</th>
                     <th className="p-4 text-right">Actions</th>
@@ -369,12 +372,11 @@ export default function AdminPage() {
                           />
                           <div>
                             <p className="font-bold text-white text-sm">{u.name || 'Anonymous'}</p>
-                            <p className="text-gray-400 text-[11px]">{u.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 font-mono text-[11px] text-gray-500 truncate max-w-[140px]">
-                        {u.id}
+                      <td className="p-4 font-mono text-[11px] text-gray-500 truncate max-w-[220px]">
+                        {u.email}
                       </td>
                       <td className="p-4">
                         <span className="inline-flex items-center gap-1 rounded-full bg-[#FF6A00]/15 px-3 py-1 font-mono font-bold text-[#FF6A00] text-xs border border-[#FF6A00]/30">
@@ -412,7 +414,7 @@ export default function AdminPage() {
                 <thead className="border-b border-[#222533] bg-[#0E1017] text-gray-400 font-bold">
                   <tr>
                     <th className="p-4">ID</th>
-                    <th className="p-4">User ID</th>
+                    <th className="p-4">Email</th>
                     <th className="p-4">Type</th>
                     <th className="p-4">Description</th>
                     <th className="p-4">Amount</th>
@@ -423,8 +425,8 @@ export default function AdminPage() {
                   {(data?.transactions || []).map((t) => (
                     <tr key={t.id} className="hover:bg-[#181B26]/50 transition-colors">
                       <td className="p-4 font-mono text-gray-500">#{t.id}</td>
-                      <td className="p-4 font-mono text-gray-400 truncate max-w-[140px]">
-                        {t.user_id}
+                      <td className="p-4 font-mono text-gray-400 truncate max-w-[140px]" title={t.user_id}>
+                        {userIdToEmail.get(t.user_id) || t.user_id}
                       </td>
                       <td className="p-4">
                         <span className="font-mono uppercase text-[10px] rounded bg-[#0A0C13] px-2 py-0.5 border border-[#222533] text-gray-300">
@@ -466,7 +468,7 @@ export default function AdminPage() {
                 <thead className="border-b border-[#222533] bg-[#0E1017] text-gray-400 font-bold">
                   <tr>
                     <th className="p-4">ID</th>
-                    <th className="p-4">User ID</th>
+                    <th className="p-4">Email</th>
                     <th className="p-4">Uploaded Photos</th>
                     <th className="p-4">Stage</th>
                     <th className="p-4">Topic</th>
@@ -480,8 +482,8 @@ export default function AdminPage() {
                   {(data?.videos || []).map((v) => (
                     <tr key={v.id} className="hover:bg-[#181B26]/50 transition-colors">
                       <td className="p-4 font-mono text-gray-500">#{v.id}</td>
-                      <td className="p-4 font-mono text-gray-400 truncate max-w-[140px]">
-                        {v.user_id}
+                      <td className="p-4 font-mono text-gray-400 truncate max-w-[140px]" title={v.user_id}>
+                        {userIdToEmail.get(v.user_id) || v.user_id}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-1.5">
