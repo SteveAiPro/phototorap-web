@@ -35,8 +35,16 @@ export default function PricingPage() {
       credits: creditsForAnalytics,
     });
 
-    refreshBalance();
-    alert('Payment received! Your credits will appear in a few seconds.');
+    // webhook 到达有几秒延迟，轮询几次把服务端写入的余额刷新出来，
+    // 否则用户看到旧余额会以为支付没生效。
+    void (async () => {
+      for (const wait of [0, 3000, 6000, 10000]) {
+        if (wait) await new Promise((r) => setTimeout(r, wait));
+        await refreshBalance();
+      }
+    })();
+
+    alert('Payment received! Your credits will appear shortly.');
   }, [refreshBalance]);
 
   const handleCheckout = async (planId: string, credits: number) => {
