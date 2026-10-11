@@ -137,6 +137,18 @@ export async function GET(req: Request) {
           `Generated 5s rap video (${stage})`
         );
 
+        if (remainingCredits === null) {
+          // 扣费失败（通常是余额不足）。视频已经生成、Replicate 那边已经真实计费，
+          // 所以仍然交付给用户，但**必须如实记账**：cost_credits 记 0。
+          // 此前无论扣费成败都记 creditsCost，导致账面上"扣了 10 分"而实际没有扣，
+          // 用户 10 积分连出多个视频也看不出来。现在 /api/generate 已加余额前置校验，
+          // 正常流程不该再走到这里。
+          console.error(
+            `[api/generate/status] Deduction FAILED for user ${userId} (cost=${creditsCost}). ` +
+              `Delivering video but recording cost_credits=0 — balance check should have blocked this.`
+          );
+        }
+
         const payloadTopic = JSON.stringify({
           topic,
           photo1: photo1 || null,
@@ -151,7 +163,7 @@ export async function GET(req: Request) {
             lyrics_topic: payloadTopic,
             status: 'completed',
             video_url: finalVideoUrl,
-            cost_credits: creditsCost,
+            cost_credits: remainingCredits === null ? 0 : creditsCost,
           });
           console.log('[api/generate/status] Successfully recorded generation in database!');
         } catch (insertErr) {

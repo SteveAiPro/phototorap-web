@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { deductCredits } from '@/lib/credits';
+import { deductCredits, getCredits } from '@/lib/credits';
 import {
   isReplicateConfigured,
   runSeedanceVideoGeneration,
@@ -54,6 +54,24 @@ export async function POST(req: Request) {
     const baseCredits = modelCreditsMap[body.model] || 10;
     const is15s = body.duration === '15s';
     const creditsDeducted = is15s ? Math.round(baseCredits * 1.3) : baseCredits;
+
+    // 余额前置校验：必须放在创建 prediction **之前**。
+    // 此前没有这一步 —— 扣费只在生成完成时尝试一次，且失败不影响成片交付，
+    // 于是 10 积分能连出多个视频（线上实测已发生 4 例：注册送 10 分 → 第 1 个扣 10
+    // → 第 2 个 cost_credits 记了 10 但没有任何扣费流水）。
+    // 除了收入流失，Replicate 那边是真实计费的，这同时是一条 denial-of-wallet 通道。
+    const balance = await getCredits(userId);
+    if (balance < creditsDeducted) {
+      return NextResponse.json(
+        {
+          error: `Insufficient credits. This generation costs ${creditsDeducted} credits and your balance is ${balance}. Please top up to continue.`,
+          code: 'INSUFFICIENT_CREDITS',
+          required: creditsDeducted,
+          balance,
+        },
+        { status: 402 }
+      );
+    }
 
     let videoUrl = stageVideoMap[stage] || '/examples/friends.mp4';
     let taskId = 'task_' + Math.random().toString(36).substring(7);
