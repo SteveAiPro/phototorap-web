@@ -12,6 +12,9 @@ const keyLocation = `https://${host}/${key}.txt`;
 const urlList = [
   `https://${host}`,
   `https://${host}/hotel-lobby-ai`,
+  `https://${host}/ai-rap-generator`,
+  `https://${host}/birthday-rap-song`,
+  `https://${host}/ai-rap-battle-generator`,
   `https://${host}/pricing`,
   `https://${host}/guides`,
   `https://${host}/privacy`,
@@ -31,6 +34,8 @@ const urlList = [
   `https://${host}/guides/quavo-and-takeoff`,
   `https://${host}/guides/hotel-lobby-song-quavo-takeoff`,
   `https://${host}/guides/how-to-do-the-hotel-lobby-trend`,
+  `https://${host}/guides/hotel-lobby-ai-apps`,
+  `https://${host}/guides/how-to-make-a-diss-track`,
 ];
 
 const postData = JSON.stringify({

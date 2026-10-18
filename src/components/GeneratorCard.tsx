@@ -57,7 +57,12 @@ const MODELS: ModelOption[] = [
   { id: 'flagship', titleKey: 'modelFlagship', engine: 'Seedance 2.5', credits: 37 },
 ];
 
-export default function GeneratorCard() {
+interface GeneratorCardProps {
+  defaultStage?: string;
+  defaultOccasion?: string;
+}
+
+export default function GeneratorCard({ defaultStage = 'hotel-lobby', defaultOccasion = 'birthday' }: GeneratorCardProps = {}) {
   const { user, deductCredits, setUserCredits, openAuthModal } = useAuth();
   const { t } = useLanguage();
 
@@ -105,7 +110,7 @@ export default function GeneratorCard() {
   };
 
   // Stage selection
-  const [selectedStage, setSelectedStage] = useState('hotel-lobby');
+  const [selectedStage, setSelectedStage] = useState(defaultStage);
 
   // Step 3 精细状态 (完全对照截图)
   const [qualityExpanded, setQualityExpanded] = useState(true); // 默认打开可折叠抽屉
@@ -117,7 +122,7 @@ export default function GeneratorCard() {
   const [aspectRatio, setAspectRatio] = useState('9:16');
 
   // Occasions & Topic input
-  const [selectedOccasion, setSelectedOccasion] = useState('birthday');
+  const [selectedOccasion, setSelectedOccasion] = useState(defaultOccasion);
   const [topicInput, setTopicInput] = useState('');
 
   // Generation state & Progress Modal
