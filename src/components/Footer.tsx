@@ -34,6 +34,11 @@ export default function Footer() {
               <li><Link href="/#generator" className="hover:text-white">Make a Video</Link></li>
               <li><Link href="/#featured" className="hover:text-white">Sound Previews</Link></li>
               <li><Link href="/hotel-lobby-ai" className="hover:text-white">Hotel Lobby AI</Link></li>
+              <li><Link href="/ai-rap-generator" className="hover:text-white">AI Rap Generator</Link></li>
+              <li><Link href="/birthday-rap-song" className="hover:text-white">Birthday Rap Song</Link></li>
+              <li><Link href="/ai-rap-battle-generator" className="hover:text-white">AI Rap Battle</Link></li>
+              <li><Link href="/diss-track-generator" className="hover:text-white">Diss Track Generator</Link></li>
+              <li><Link href="/rap-duo-name-generator" className="hover:text-white">Rap Duo Name Generator</Link></li>
               <li><Link href="/pricing" className="hover:text-white">Pricing & Plans</Link></li>
               <li><Link href="/llms.txt" target="_blank" className="hover:text-[#FF6A00] flex items-center gap-1 font-mono text-[11px]">llms.txt (AI Spec)</Link></li>
             </ul>

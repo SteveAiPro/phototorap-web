@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import GuidesSection from '@/components/GuidesSection';
+import GeneratorsStrip from '@/components/GeneratorsStrip';
 import AuthModal from '@/components/AuthModal';
 import Footer from '@/components/Footer';
 import { AdsterraNativeBanner } from '@/components/AdsterraBanner';
@@ -55,13 +56,6 @@ export default function Home() {
           lowPrice: '0.00',
           highPrice: '29.90',
           offerCount: '3',
-        },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: '4.9',
-          ratingCount: '2840',
-          bestRating: '5',
-          worstRating: '1',
         },
       },
       {
@@ -160,6 +154,7 @@ export default function Home() {
       <Navbar />
       <AuthModal />
       <HeroSection />
+      <GeneratorsStrip />
       <GuidesSection />
 
       <AdsterraNativeBanner />
