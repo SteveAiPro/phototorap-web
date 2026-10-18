@@ -8,17 +8,9 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://phototorap.com'),
   alternates: {
     canonical: 'https://phototorap.com',
-    languages: {
-      'en': 'https://phototorap.com',
-      'zh': 'https://phototorap.com/zh',
-      'es': 'https://phototorap.com/es',
-      'fr': 'https://phototorap.com/fr',
-      'pt': 'https://phototorap.com/pt',
-      'de': 'https://phototorap.com/de',
-      'ja': 'https://phototorap.com/ja',
-      'ko': 'https://phototorap.com/ko',
-      'x-default': 'https://phototorap.com',
-    },
+    // 注意：本站没有语言路由（多语言为客户端切换，不产生独立 URL），
+    // /zh /es /fr /pt /de /ja /ko 全部返回 404，因此不能声明 hreflang 替代版本。
+    // 与 src/app/sitemap.ts 中的处理保持一致；日后实现真正的 i18n 路由后再恢复。
   },
   icons: {
     icon: [

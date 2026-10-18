@@ -44,8 +44,8 @@ export default function Footer() {
             <h4 className="font-bold text-white uppercase tracking-wider mb-3">Guides & SEO</h4>
             <ul className="space-y-2">
               <li><Link href="/guides/how-to-do-the-hotel-lobby-trend" className="hover:text-white">Hotel Lobby Tutorial</Link></li>
-              <li><Link href="/guides/funny-rap-lyrics-and-prompts" className="hover:text-white">Funny Rap Lyrics</Link></li>
-              <li><Link href="/guides/best-ai-rap-video-generators" className="hover:text-white">Top 5 AI Rap Makers</Link></li>
+              <li><Link href="/guides/funny-rap-lyrics" className="hover:text-white">Funny Rap Lyrics</Link></li>
+              <li><Link href="/guides/best-ai-rap-generator" className="hover:text-white">Top 5 AI Rap Makers</Link></li>
               <li><Link href="/guides" className="hover:text-white">All Guides Hub</Link></li>
             </ul>
           </div>
