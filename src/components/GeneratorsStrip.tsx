@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Flame, Sparkles, Cake, Swords, Skull, Type } from 'lucide-react';
+import { Flame, Sparkles, Cake, Swords, Skull, Type, Ghost } from 'lucide-react';
 
 const GENERATORS = [
   {
@@ -20,6 +20,13 @@ const GENERATORS = [
     icon: Cake,
     title: 'Birthday Rap Song',
     desc: 'A personalized rap video birthday gift',
+  },
+  {
+    // 季节性卡片：万圣节过后（11 月初）撤掉这一张，/halloween-rap-song 页面保留为常青页
+    href: '/halloween-rap-song',
+    icon: Ghost,
+    title: 'Halloween Rap Song',
+    desc: 'A spooky rap video of you and your crew',
   },
   {
     href: '/ai-rap-battle-generator',

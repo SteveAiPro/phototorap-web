@@ -17,6 +17,7 @@ const urlList = [
   `https://${host}/ai-rap-battle-generator`,
   `https://${host}/diss-track-generator`,
   `https://${host}/rap-duo-name-generator`,
+  `https://${host}/halloween-rap-song`,
   `https://${host}/pricing`,
   `https://${host}/guides`,
   `https://${host}/privacy`,
