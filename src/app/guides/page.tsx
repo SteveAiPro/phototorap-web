@@ -72,6 +72,53 @@ export default function GuidesHub() {
             </Link>
           ))}
         </div>
+
+        {/* CollectionPage + ItemList + BreadcrumbList JSON-LD */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'CollectionPage',
+                  name: 'AI Rap Video Guides, Tutorials & Prompts',
+                  description:
+                    'Tutorials, lyric prompts and comparisons for making viral AI rap videos, focused on the Hotel Lobby trend.',
+                  url: 'https://phototorap.com/guides',
+                  inLanguage: 'en',
+                },
+                {
+                  '@type': 'ItemList',
+                  numberOfItems: GUIDES.length,
+                  itemListElement: GUIDES.map((guide, i) => ({
+                    '@type': 'ListItem',
+                    position: i + 1,
+                    name: guide.title,
+                    url: `https://phototorap.com/guides/${guide.slug}`,
+                  })),
+                },
+                {
+                  '@type': 'BreadcrumbList',
+                  itemListElement: [
+                    {
+                      '@type': 'ListItem',
+                      position: 1,
+                      name: 'Home',
+                      item: 'https://phototorap.com',
+                    },
+                    {
+                      '@type': 'ListItem',
+                      position: 2,
+                      name: 'Guides',
+                      item: 'https://phototorap.com/guides',
+                    },
+                  ],
+                },
+              ],
+            }),
+          }}
+        />
       </main>
 
       <Footer />
