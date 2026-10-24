@@ -34,6 +34,10 @@ const config: EffectConfig = {
   ],
   defaultStage: 'street-cypher',
   defaultOccasion: 'friends',
+  examples: [
+    { src: '/examples/roast.mp4', poster: '/examples/roast.jpg', label: 'Friendly roast performance' },
+    { src: '/examples/orange-street.mp4', poster: '/examples/orange-street.webp', label: 'Street stage duo' },
+  ],
   aboutTitle: 'How to set up a good AI rap battle',
   about: [
     'A rap battle lives on specifics. "My friend is bad at cooking" is a weak topic; "burned pasta three times, still calls himself the group chef" gives the writer something to swing with. Enter one line about each battler, or the shared history you both laugh about, and the generator writes verses for both sides, so the battle feels even.',

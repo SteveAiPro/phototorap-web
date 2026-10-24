@@ -13,6 +13,7 @@ export interface EffectConfig {
   bullets: string[];
   defaultStage: string;
   defaultOccasion: string;
+  examples: { src: string; poster: string; label: string }[];
   aboutTitle: string;
   about: string[];
   faqs: { q: string; a: string }[];
@@ -63,6 +64,30 @@ export default function EffectPage({ config }: { config: EffectConfig }) {
             />
           </div>
         </div>
+
+        <section className="mt-20">
+          <h2 className="font-display text-2xl sm:text-3xl font-black text-white">
+            Watch real examples first
+          </h2>
+          <p className="mt-2 text-sm text-gray-400">
+            Actual videos rendered by this generator. Yours will be written around your own photos and topic.
+          </p>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
+            {config.examples.map((ex) => (
+              <figure key={ex.src} className="rounded-2xl border border-[#222533] bg-[#12141C] p-3">
+                <video
+                  className="w-full rounded-xl"
+                  src={ex.src}
+                  poster={ex.poster}
+                  controls
+                  preload="none"
+                  playsInline
+                />
+                <figcaption className="mt-2 text-xs text-gray-400">{ex.label}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
 
         <section className="mt-20 max-w-3xl">
           <h2 className="font-display text-2xl sm:text-3xl font-black text-white">

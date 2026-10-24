@@ -34,6 +34,10 @@ const config: EffectConfig = {
   ],
   defaultStage: 'studio-booth',
   defaultOccasion: 'friends',
+  examples: [
+    { src: '/examples/friends.mp4', poster: '/examples/friends.jpg', label: 'Best friends duo, Hotel Lobby stage' },
+    { src: '/examples/couple.mp4', poster: '/examples/couple.jpg', label: 'Couple duo performance' },
+  ],
   aboutTitle: 'How this AI rap generator works',
   about: [
     'Most AI music tools stop at audio. PhotoToRap goes one step further: it starts from your photos, so the finished rap is a video of you performing, not just a track with your name on it. Add one clear photo for a solo performance, or one photo of each person for a duo where you trade verses back and forth.',

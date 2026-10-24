@@ -46,6 +46,25 @@ export default function HotelLobbyPage() {
             <GeneratorCard />
           </div>
         </div>
+
+        <section className="mt-20">
+          <h2 className="font-display text-2xl sm:text-3xl font-black text-white">
+            Watch real examples first
+          </h2>
+          <p className="mt-2 text-sm text-gray-400">
+            Actual videos rendered by this generator. Yours will be written around your own photos and topic.
+          </p>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
+            <figure className="rounded-2xl border border-[#222533] bg-[#12141C] p-3">
+              <video className="w-full rounded-xl" src="/examples/friends.mp4" poster="/examples/friends.jpg" controls preload="none" playsInline />
+              <figcaption className="mt-2 text-xs text-gray-400">Best friends duo, Hotel Lobby stage</figcaption>
+            </figure>
+            <figure className="rounded-2xl border border-[#222533] bg-[#12141C] p-3">
+              <video className="w-full rounded-xl" src="/examples/roast.mp4" poster="/examples/roast.jpg" controls preload="none" playsInline />
+              <figcaption className="mt-2 text-xs text-gray-400">Friendly roast performance</figcaption>
+            </figure>
+          </div>
+        </section>
       </main>
 
       <Footer />

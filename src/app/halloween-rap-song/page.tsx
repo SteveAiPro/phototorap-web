@@ -37,6 +37,10 @@ const config: EffectConfig = {
   // 这里传 'halloween' 表示不预选任何 chip，用户在 topic 输入框里写万圣节主题；
   // topic 字段是自由文本（topicInput || selectedOccasion），后端按 topic 写词，无需改后端。
   defaultOccasion: 'halloween',
+  examples: [
+    { src: '/examples/neon-elevator.mp4', poster: '/examples/neon-elevator.webp', label: 'Neon stage performance' },
+    { src: '/examples/orange-street.mp4', poster: '/examples/orange-street.webp', label: 'Street stage duo' },
+  ],
   aboutTitle: 'Why a Halloween rap video works',
   about: [
     'Halloween content has a brutal half-life: party photos are forgotten by November 1st. A video of the two of you trading verses about the costume contest, the haunted house trip, or the friend who refuses to dress up every year gets forwarded, duetted and rewatched. The generator writes original Halloween bars around the topic line you give it — name the theme and the crew, and the song is about your night, not a generic spooky template.',

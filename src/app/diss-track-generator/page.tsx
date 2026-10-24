@@ -34,6 +34,10 @@ const config: EffectConfig = {
   ],
   defaultStage: 'street-cypher',
   defaultOccasion: 'friends',
+  examples: [
+    { src: '/examples/roast.mp4', poster: '/examples/roast.jpg', label: 'Friendly roast performance' },
+    { src: '/examples/grandpas.mp4', poster: '/examples/grandpas.jpg', label: 'Duo performance, Studio stage' },
+  ],
   aboutTitle: 'What makes a diss track land',
   about: [
     'Specificity is the whole weapon. "You are bad at FIFA" is forgettable; "lost 7-0, blamed the controller, bought a new controller, lost 6-0" is a verse. Give the generator one true story or legendary habit in the topic line and it will build the diss around it: the setup, the evidence, the punchline on the last word of the bar.',

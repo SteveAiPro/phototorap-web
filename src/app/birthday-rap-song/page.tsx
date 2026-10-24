@@ -34,6 +34,10 @@ const config: EffectConfig = {
   ],
   defaultStage: 'hotel-lobby',
   defaultOccasion: 'birthday',
+  examples: [
+    { src: '/examples/couple.mp4', poster: '/examples/couple.jpg', label: 'A duo performance like the one you will gift' },
+    { src: '/examples/friends.mp4', poster: '/examples/friends.jpg', label: 'Best friends duo, Hotel Lobby stage' },
+  ],
   aboutTitle: 'Why a birthday rap song works as a gift',
   about: [
     'Group chats forget birthday messages in a day. A video of the two of you trading verses about the birthday person does not get forgotten: it gets replayed, forwarded to family and posted on their story. The generator writes original birthday bars around the details you give it, so the song is about them, not a template with a name swapped in.',
