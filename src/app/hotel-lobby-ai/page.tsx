@@ -72,6 +72,8 @@ const config: EffectConfig = {
     { href: '/ai-rap-generator', label: 'AI Rap Generator' },
     { href: '/ai-rap-battle-generator', label: 'AI Rap Battle Generator' },
     { href: '/guides/how-to-do-the-hotel-lobby-trend', label: 'Guide: How to Do the Hotel Lobby Trend' },
+    { href: '/guides/hotel-lobby-song-quavo-takeoff', label: 'Guide: The Story Behind the Song' },
+    { href: '/guides/hotel-lobby-lyrics', label: 'Guide: Hotel Lobby Lyrics' },
     { href: '/guides/hotel-lobby-capcut-template', label: 'Guide: Hotel Lobby CapCut Template' },
     { href: '/guides/hotel-lobby-ai-apps', label: 'Guide: Hotel Lobby AI Apps Compared' },
   ],

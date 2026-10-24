@@ -68,6 +68,7 @@ const config: EffectConfig = {
     { href: '/birthday-rap-song', label: 'Birthday Rap Song' },
     { href: '/ai-rap-battle-generator', label: 'AI Rap Battle Generator' },
     { href: '/guides/best-ai-rap-generator', label: 'Guide: Best AI Rap Generators' },
+    { href: '/guides/how-to-make-an-ai-rap-video', label: 'Guide: How to Make an AI Rap Video' },
   ],
 };
 
