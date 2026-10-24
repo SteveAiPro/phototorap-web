@@ -1,7 +1,7 @@
 import https from 'https';
 
 const host = 'phototorap.com';
-const key = 'ad3b3f17661a4bfab2047e65f53f8ccf';
+const key = '1fcd142b9dc24aa6897cec16941906ea';
 const keyLocation = `https://${host}/${key}.txt`;
 
 // List of all essential indexed URLs
