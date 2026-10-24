@@ -11,7 +11,7 @@
   - Studio Booth (Intimate dark microphone session)
   - Street Cypher (Night city asphalt cypher with orange smoke)
 - **Zero Watermark**: Full HD 1080p exports without watermarks on paid and credit exports.
-- **Multilingual Support**: Fully internationalized across 8 languages (English, Spanish, French, German, Portuguese, Japanese, Korean, Chinese).
+- **UI Language**: The interface can be displayed in 8 languages (English, Spanish, French, German, Portuguese, Japanese, Korean, Chinese) via an in-page language switcher. All content and URLs are English-only at the canonical domain; there are no per-language URLs (e.g. /es returns a redirect to the English page).
 
 ## Technical Specifications & Pricing
 - **Base Pricing**:
@@ -38,7 +38,19 @@
 - Hotel Lobby AI Feature: https://phototorap.com/hotel-lobby-ai
 - Guides & Tutorials: https://phototorap.com/guides
   - How to Make an AI Rap Video: https://phototorap.com/guides/how-to-make-an-ai-rap-video
-  - Higgsfield Hotel Lobby Trend: https://phototorap.com/guides/higgsfield-hotel-lobby
   - Best AI Rap Generators 2026: https://phototorap.com/guides/best-ai-rap-generator
   - Funny Rap Lyrics & Roasts: https://phototorap.com/guides/funny-rap-lyrics
-- Contact & Support: support@phototorap.com
+
+## Hotel Lobby Trend Cluster (Quavo & Takeoff, Unc & Phew)
+Background, lyrics and tutorials for the viral orange-booth duo trend:
+- Hotel Lobby Lyrics Explained: https://phototorap.com/guides/hotel-lobby-lyrics
+- The Story Behind the Song: https://phototorap.com/guides/hotel-lobby-song-quavo-takeoff
+- How to Do the Hotel Lobby Trend: https://phototorap.com/guides/how-to-do-the-hotel-lobby-trend
+- Hotel Lobby Trend Ideas (12 duos): https://phototorap.com/guides/hotel-lobby-trend-ideas
+- Hotel Lobby CapCut Template: https://phototorap.com/guides/hotel-lobby-capcut-template
+- Higgsfield Hotel Lobby Trend: https://phototorap.com/guides/higgsfield-hotel-lobby
+- Hotel Lobby AI Apps Compared: https://phototorap.com/guides/hotel-lobby-ai-apps
+- Quavo and Takeoff: Are They Related?: https://phototorap.com/guides/quavo-and-takeoff
+
+## Contact & Support
+- Email: support@phototorap.com
