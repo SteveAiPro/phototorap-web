@@ -5,6 +5,17 @@ export const metadata = {
   title: 'Birthday Rap Song Generator: A Personal Rap Video Gift | PhotoToRap AI',
   description:
     'Make a personalized birthday rap song as a video: upload photos of you and the birthday star, add one line about them, and get a lip-synced duo rap in about 3 minutes.',
+  openGraph: {
+    title: 'Birthday Rap Song Generator: A Personal Rap Video Gift | PhotoToRap AI',
+    description:
+      'Make a personalized birthday rap song as a video: upload photos of you and the birthday star, add one line about them, and get a lip-synced duo rap in about 3 minutes.',
+    url: 'https://phototorap.com/birthday-rap-song',
+  },
+  twitter: {
+    title: 'Birthday Rap Song Generator: A Personal Rap Video Gift | PhotoToRap AI',
+    description:
+      'Make a personalized birthday rap song as a video: upload photos of you and the birthday star, add one line about them, and get a lip-synced duo rap in about 3 minutes.',
+  },
   alternates: {
     canonical: 'https://phototorap.com/birthday-rap-song',
   },

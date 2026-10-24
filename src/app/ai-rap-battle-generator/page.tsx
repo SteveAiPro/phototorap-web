@@ -5,6 +5,17 @@ export const metadata = {
   title: 'AI Rap Battle Generator: Roast Your Friend in a Rap Video | PhotoToRap AI',
   description:
     'Turn two photos into a friendly AI rap battle: pick your opponent, write the roast topic, and watch both of you trade diss verses in a lip-synced street cypher video.',
+  openGraph: {
+    title: 'AI Rap Battle Generator: Roast Your Friend in a Rap Video | PhotoToRap AI',
+    description:
+      'Turn two photos into a friendly AI rap battle: pick your opponent, write the roast topic, and watch both of you trade diss verses in a lip-synced street cypher video.',
+    url: 'https://phototorap.com/ai-rap-battle-generator',
+  },
+  twitter: {
+    title: 'AI Rap Battle Generator: Roast Your Friend in a Rap Video | PhotoToRap AI',
+    description:
+      'Turn two photos into a friendly AI rap battle: pick your opponent, write the roast topic, and watch both of you trade diss verses in a lip-synced street cypher video.',
+  },
   alternates: {
     canonical: 'https://phototorap.com/ai-rap-battle-generator',
   },

@@ -5,6 +5,17 @@ export const metadata = {
   title: 'AI Rap Generator: Make a Rap Video from Your Photos | PhotoToRap AI',
   description:
     'Turn 1 or 2 photos into an original, lip-synced AI rap video in about 3 minutes. Pick a stage, add a topic, and get a vertical MP4 ready for TikTok and Reels.',
+  openGraph: {
+    title: 'AI Rap Generator: Make a Rap Video from Your Photos | PhotoToRap AI',
+    description:
+      'Turn 1 or 2 photos into an original, lip-synced AI rap video in about 3 minutes. Pick a stage, add a topic, and get a vertical MP4 ready for TikTok and Reels.',
+    url: 'https://phototorap.com/ai-rap-generator',
+  },
+  twitter: {
+    title: 'AI Rap Generator: Make a Rap Video from Your Photos | PhotoToRap AI',
+    description:
+      'Turn 1 or 2 photos into an original, lip-synced AI rap video in about 3 minutes. Pick a stage, add a topic, and get a vertical MP4 ready for TikTok and Reels.',
+  },
   alternates: {
     canonical: 'https://phototorap.com/ai-rap-generator',
   },
