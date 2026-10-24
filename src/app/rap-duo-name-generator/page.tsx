@@ -5,17 +5,17 @@ import NameGenerator from '@/components/NameGenerator';
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Rap Duo Name Generator: Free Stage Names for Your Duo | PhotoToRap AI',
+  title: 'Rap Duo Name Generator: Free Stage Names for Duos',
   description:
     'Free rap duo name generator: get stage name ideas for your rap duo in four styles, then turn the duo into a real rap video from two photos with PhotoToRap AI.',
   openGraph: {
-    title: 'Rap Duo Name Generator: Free Stage Names for Your Duo | PhotoToRap AI',
+    title: 'Rap Duo Name Generator: Free Stage Names for Duos',
     description:
       'Free rap duo name generator: get stage name ideas for your rap duo in four styles, then turn the duo into a real rap video from two photos with PhotoToRap AI.',
     url: 'https://phototorap.com/rap-duo-name-generator',
   },
   twitter: {
-    title: 'Rap Duo Name Generator: Free Stage Names for Your Duo | PhotoToRap AI',
+    title: 'Rap Duo Name Generator: Free Stage Names for Duos',
     description:
       'Free rap duo name generator: get stage name ideas for your rap duo in four styles, then turn the duo into a real rap video from two photos with PhotoToRap AI.',
   },

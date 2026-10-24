@@ -1,73 +1,81 @@
 import React from 'react';
-import Navbar from '@/components/Navbar';
-import GeneratorCard from '@/components/GeneratorCard';
-import Footer from '@/components/Footer';
-import { Flame, Check, Sparkles } from 'lucide-react';
+import EffectPage, { EffectConfig } from '@/components/EffectPage';
 
 export const metadata = {
   title: 'Hotel Lobby AI Rap Video Generator | PhotoToRap AI',
-  description: 'Create the viral Hotel Lobby COLORS booth rap video with two photos. Lip-synced Quavo & Takeoff style duo video ready in 3 minutes.',
+  description:
+    'Make the viral Hotel Lobby COLORS booth rap video from two photos. Lip-synced duo performance on an original beat, vertical 9:16, ready in about 3 minutes.',
+  openGraph: {
+    title: 'Hotel Lobby AI Rap Video Generator | PhotoToRap AI',
+    description:
+      'Make the viral Hotel Lobby COLORS booth rap video from two photos. Lip-synced duo performance on an original beat, vertical 9:16, ready in about 3 minutes.',
+    url: 'https://phototorap.com/hotel-lobby-ai',
+  },
+  twitter: {
+    title: 'Hotel Lobby AI Rap Video Generator | PhotoToRap AI',
+    description:
+      'Make the viral Hotel Lobby COLORS booth rap video from two photos. Lip-synced duo performance on an original beat, vertical 9:16, ready in about 3 minutes.',
+  },
   alternates: {
     canonical: 'https://phototorap.com/hotel-lobby-ai',
   },
 };
 
+const config: EffectConfig = {
+  badge: 'THE VIRAL ORANGE COLORS BOOTH',
+  h1Top: 'Hotel Lobby AI',
+  h1Accent: 'Rap Generator',
+  intro:
+    'Step into the orange booth everyone is posting. Upload one photo of you and one of your friend, add a single line about the two of you, and the generator writes an original rap, produces the beat and renders both of you performing it lip-synced on a Hotel Lobby-style stage.',
+  bullets: [
+    'Two people, two photos, one duo performance',
+    'Orange monochrome booth, 142 BPM hip-hop beat',
+    'Original song, so nothing gets muted on TikTok or Reels',
+    'Vertical 9:16 MP4, ready in about 3 minutes',
+  ],
+  defaultStage: 'hotel-lobby',
+  defaultOccasion: 'friends',
+  examples: [
+    { src: '/examples/friends.mp4', poster: '/examples/friends.jpg', label: 'Best friends duo, Hotel Lobby stage' },
+    { src: '/examples/roast.mp4', poster: '/examples/roast.jpg', label: 'Friendly roast performance' },
+  ],
+  aboutTitle: 'What the Hotel Lobby AI video actually is',
+  about: [
+    'The Hotel Lobby trend comes from the orange COLORS-style booth performance: two people side by side in monochrome orange light, trading verses straight to camera in one continuous shot. It travelled from hip-hop into TikTok, Reels and LinkedIn because the format is instantly recognisable and needs no explanation. This generator rebuilds that look around your own photos instead of someone else\'s clip.',
+    'Add one clear, front-facing photo of each person (or one photo of the two of you together). Then write the topic in one line: a birthday, a friendship that goes back years, a friendly roast, a business launch. The lyrics are written around that line, so the rap is about your actual story rather than generic bars. Sunglasses, heavy filters and group shots where faces are small tend to hurt the render, so pick photos where both faces are large and well lit.',
+    'The result is an original song on an original beat, performed by both of you, exported as a vertical 9:16 MP4. Because nothing is sampled, there is no third-party track for TikTok or Instagram to mute, and no real artist is impersonated. One video is $9.99, packs start at $29 for 5, and a render that fails is never charged. Only upload photos of people who agreed to appear in the video.',
+  ],
+  faqs: [
+    {
+      q: 'Do I need two photos or just one?',
+      a: 'Either works. One photo of each person gives a duo where you trade verses back and forth; one photo of the two of you together also works. A single photo makes a solo performance on the same stage.',
+    },
+    {
+      q: 'Does it use the original Hotel Lobby song?',
+      a: 'No. The lyrics and the beat are generated from scratch for your video, so the track is original and will not be muted or taken down for copyright. PhotoToRap is not affiliated with, or endorsed by, the original artists.',
+    },
+    {
+      q: 'How much does a Hotel Lobby AI video cost?',
+      a: 'You can watch a free preview first and only pay when you like the result. A single full video is $9.99, packs start at $29 for 5 videos, and a failed render is never charged.',
+    },
+    {
+      q: 'How long does the render take, and what format do I get?',
+      a: 'A standard render takes about 3 minutes. You get a vertical 9:16 MP4 sized for TikTok, Reels and Shorts, with the length and resolution you picked before rendering.',
+    },
+    {
+      q: 'Can I post it on TikTok, Reels or LinkedIn?',
+      a: 'Yes. The song is original and the video is yours to post. Use photos of people who agreed to be in it, and skip celebrities or public figures.',
+    },
+  ],
+  related: [
+    { href: '/ai-rap-generator', label: 'AI Rap Generator' },
+    { href: '/ai-rap-battle-generator', label: 'AI Rap Battle Generator' },
+    { href: '/guides/how-to-do-the-hotel-lobby-trend', label: 'Guide: How to Do the Hotel Lobby Trend' },
+    { href: '/guides/hotel-lobby-capcut-template', label: 'Guide: Hotel Lobby CapCut Template' },
+    { href: '/guides/hotel-lobby-ai-apps', label: 'Guide: Hotel Lobby AI Apps Compared' },
+  ],
+};
+
 export default function HotelLobbyPage() {
-  return (
-    <div className="min-h-screen bg-[#090A0F] text-[#F3F4F6]">
-      <Navbar />
-
-      <main className="py-12 px-4 sm:px-6 mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6A00]/40 bg-[#FF6A00]/15 px-3 py-1 text-xs font-bold text-[#FF6A00] mb-4">
-              <Flame className="h-4 w-4" />
-              <span>THE VIRAL QUAVO & TAKEOFF ORANGE BOOTH</span>
-            </div>
-            <h1 className="font-display text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight">
-              Hotel Lobby AI <span className="text-[#FF6A00]">Rap Generator</span>
-            </h1>
-            <p className="mt-4 text-base text-gray-300 leading-relaxed">
-              Step into the famous orange COLORS stage. Upload one photo of you and one photo of your friend, and AI renders your customized Hotel Lobby rap duo performance.
-            </p>
-            <div className="mt-6 flex flex-col gap-2 text-xs text-gray-400">
-              <span className="flex items-center gap-2 text-white">
-                <Check className="h-4 w-4 text-[#FF6A00]" /> Authentic orange monochrome booth aesthetics
-              </span>
-              <span className="flex items-center gap-2 text-white">
-                <Check className="h-4 w-4 text-[#FF6A00]" /> High quality 142 BPM hip-hop 808 beat
-              </span>
-              <span className="flex items-center gap-2 text-white">
-                <Check className="h-4 w-4 text-[#FF6A00]" /> Vertical 9:16 format ready for TikTok & Reels
-              </span>
-            </div>
-          </div>
-          <div className="lg:col-span-6">
-            <GeneratorCard />
-          </div>
-        </div>
-
-        <section className="mt-20">
-          <h2 className="font-display text-2xl sm:text-3xl font-black text-white">
-            Watch real examples first
-          </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            Actual videos rendered by this generator. Yours will be written around your own photos and topic.
-          </p>
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
-            <figure className="rounded-2xl border border-[#222533] bg-[#12141C] p-3">
-              <video className="w-full rounded-xl" src="/examples/friends.mp4" poster="/examples/friends.jpg" controls preload="none" playsInline />
-              <figcaption className="mt-2 text-xs text-gray-400">Best friends duo, Hotel Lobby stage</figcaption>
-            </figure>
-            <figure className="rounded-2xl border border-[#222533] bg-[#12141C] p-3">
-              <video className="w-full rounded-xl" src="/examples/roast.mp4" poster="/examples/roast.jpg" controls preload="none" playsInline />
-              <figcaption className="mt-2 text-xs text-gray-400">Friendly roast performance</figcaption>
-            </figure>
-          </div>
-        </section>
-      </main>
-
-      <Footer />
-    </div>
-  );
+  return <EffectPage config={config} />;
 }

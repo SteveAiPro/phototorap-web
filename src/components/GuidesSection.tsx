@@ -72,6 +72,25 @@ export default function GuidesSection() {
             </Link>
           ))}
         </div>
+
+        {/* 全量 guides 文字内链：此前首页只链出 3 篇，其余 10 篇只能靠 /guides 一层触达。
+            这里补齐，保证每篇文章都有一次首页入口（爬虫路径 + 内链权重）。 */}
+        <div className="mt-8 border-t border-[#222533] pt-6">
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">
+            More guides
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {GUIDES.slice(3).map((guide) => (
+              <Link
+                key={guide.slug}
+                href={`/guides/${guide.slug}`}
+                className="text-xs text-gray-400 hover:text-[#FF6A00] transition-colors"
+              >
+                {guide.title.split(':')[0]}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

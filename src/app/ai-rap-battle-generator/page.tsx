@@ -2,19 +2,19 @@ import React from 'react';
 import EffectPage, { EffectConfig } from '@/components/EffectPage';
 
 export const metadata = {
-  title: 'AI Rap Battle Generator: Roast Your Friend in a Rap Video | PhotoToRap AI',
+  title: 'AI Rap Battle Generator: Roast Your Friend in a Video',
   description:
-    'Turn two photos into a friendly AI rap battle: pick your opponent, write the roast topic, and watch both of you trade diss verses in a lip-synced street cypher video.',
+    'Turn two photos into a friendly AI rap battle: pick your opponent, write the roast topic, and watch both of you trade diss verses in a lip-synced cypher video.',
   openGraph: {
-    title: 'AI Rap Battle Generator: Roast Your Friend in a Rap Video | PhotoToRap AI',
+    title: 'AI Rap Battle Generator: Roast Your Friend in a Video',
     description:
-      'Turn two photos into a friendly AI rap battle: pick your opponent, write the roast topic, and watch both of you trade diss verses in a lip-synced street cypher video.',
+      'Turn two photos into a friendly AI rap battle: pick your opponent, write the roast topic, and watch both of you trade diss verses in a lip-synced cypher video.',
     url: 'https://phototorap.com/ai-rap-battle-generator',
   },
   twitter: {
-    title: 'AI Rap Battle Generator: Roast Your Friend in a Rap Video | PhotoToRap AI',
+    title: 'AI Rap Battle Generator: Roast Your Friend in a Video',
     description:
-      'Turn two photos into a friendly AI rap battle: pick your opponent, write the roast topic, and watch both of you trade diss verses in a lip-synced street cypher video.',
+      'Turn two photos into a friendly AI rap battle: pick your opponent, write the roast topic, and watch both of you trade diss verses in a lip-synced cypher video.',
   },
   alternates: {
     canonical: 'https://phototorap.com/ai-rap-battle-generator',

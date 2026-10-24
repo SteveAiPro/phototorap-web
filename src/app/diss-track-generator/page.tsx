@@ -2,17 +2,17 @@ import React from 'react';
 import EffectPage, { EffectConfig } from '@/components/EffectPage';
 
 export const metadata = {
-  title: 'Diss Track Generator: Make a Friendly Diss Rap Video | PhotoToRap AI',
+  title: 'Diss Track Generator: Make a Friendly Diss Rap Video',
   description:
     'Turn a photo and one roast topic into a diss track video: original diss bars about your friend, performed lip-synced in about 3 minutes. Friendly roasts only.',
   openGraph: {
-    title: 'Diss Track Generator: Make a Friendly Diss Rap Video | PhotoToRap AI',
+    title: 'Diss Track Generator: Make a Friendly Diss Rap Video',
     description:
       'Turn a photo and one roast topic into a diss track video: original diss bars about your friend, performed lip-synced in about 3 minutes. Friendly roasts only.',
     url: 'https://phototorap.com/diss-track-generator',
   },
   twitter: {
-    title: 'Diss Track Generator: Make a Friendly Diss Rap Video | PhotoToRap AI',
+    title: 'Diss Track Generator: Make a Friendly Diss Rap Video',
     description:
       'Turn a photo and one roast topic into a diss track video: original diss bars about your friend, performed lip-synced in about 3 minutes. Friendly roasts only.',
   },

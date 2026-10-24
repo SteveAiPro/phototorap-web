@@ -15,7 +15,7 @@ export const GUIDES: Guide[] = [
   {
     "slug": "higgsfield-hotel-lobby",
     "title": "Higgsfield Hotel Lobby: How It Works, and a Simpler Way",
-    "description": "How people make the Hotel Lobby AI video on Higgsfield (Genjutsu recreate or motion transfer), what that involves, and how to make a two-person Hotel Lobby video from two photos instead.",
+    "description": "How creators make the Hotel Lobby AI video on Higgsfield, what that involves, and how to make a two-person Hotel Lobby video from two photos instead.",
     "readTime": "4 min read",
     "category": "Tutorial",
     "tag": "Hotel Lobby",
@@ -30,8 +30,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "funny-rap-lyrics",
-    "title": "Funny Rap Lyrics: 18 Original Bars About Everyday Life (Clean)",
-    "description": "Funny rap lyrics you can actually use: 18 original, clean bars about Wi-Fi, diets, laundry, cats, group projects and autocorrect, plus the funny rap songs worth knowing and how to make a funny rap video with a friend.",
+    "title": "Funny Rap Lyrics: 18 Clean Bars About Everyday Life",
+    "description": "18 original, clean funny rap lyrics about Wi-Fi, diets, laundry and cats, plus the funny rap songs worth knowing and how to make one with a friend.",
     "readTime": "5 min read",
     "category": "Lyrics & Prompts",
     "tag": "Funny Rap",
@@ -46,8 +46,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "hotel-lobby-capcut-template",
-    "title": "Hotel Lobby CapCut Template: Where to Find It + an Easier Way",
-    "description": "Where to find the Hotel Lobby CapCut template, how to use it step by step, what it can and can’t do, and how to make a two-person Hotel Lobby video from photos instead.",
+    "title": "Hotel Lobby CapCut Template: Where to Find It + How",
+    "description": "Where to find the Hotel Lobby CapCut template, how to use it step by step, what it can't do, and how to make a two-person version from photos instead.",
     "readTime": "4 min read",
     "category": "Templates",
     "tag": "CapCut",
@@ -62,8 +62,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "hotel-lobby-trend-ideas",
-    "title": "Hotel Lobby Trend Ideas: 12 Duos to Try (and What to Rap About)",
-    "description": "Twelve Hotel Lobby trend ideas: with your dad, your partner, your best friend, a sibling, a coworker or your business partner, plus a one-line topic for each so the rap is about you.",
+    "title": "Hotel Lobby Trend Ideas: 12 Duos to Try (With Topics)",
+    "description": "12 Hotel Lobby trend ideas: with your dad, partner, best friend, sibling or coworker, plus a one-line topic for each so the rap is really about you.",
     "readTime": "4 min read",
     "category": "Inspiration",
     "tag": "Trend Ideas",
@@ -78,8 +78,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "rap-battle-roasts",
-    "title": "Rap Battle Lyrics to Roast Someone: 25 Funny, Clean Lines",
-    "description": "Rap battle lines to roast a friend, all original and clean: the late one, the bad cook, the gym member who never goes, the gamer, the group chat ghost. Plus how to write your own roast bars and turn the battle into a video of the two of you.",
+    "title": "Rap Battle Lyrics to Roast Someone: 25 Clean Lines",
+    "description": "25 original, clean rap battle lines to roast a friend: the late one, the bad cook, the group chat ghost. Plus how to turn the battle into a video.",
     "readTime": "5 min read",
     "category": "Lyrics & Prompts",
     "tag": "Roast Rap",
@@ -94,8 +94,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "rap-songs-about-friends",
-    "title": "Rap Songs About Friends: 9 Hip-Hop Songs About Friendship",
-    "description": "Rap songs about friends and friendship, from Whodini’s \"Friends\" to Wiz Khalifa’s \"See You Again\": the loyal-crew anthems, the tributes and the fake-friend warnings. Plus how to make a rap song about your best friend starring the two of you.",
+    "title": "Rap Songs About Friends: 9 Hip-Hop Friendship Anthems",
+    "description": "Rap songs about friends and friendship, from Whodini's Friends to See You Again: the loyal-crew anthems, the tributes and the fake-friend warnings.",
     "readTime": "5 min read",
     "category": "Hip-Hop History",
     "tag": "Friendship",
@@ -110,8 +110,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "best-ai-music-video-generators",
-    "title": "Best AI Music Video Generators in 2026: Which One Fits Your Video",
-    "description": "The best AI music video generators compared by the job they do: a video for your own song, beat-synced visuals, cinematic shots, or a rap video starring you and a friend. What each is good at, what it needs from you, and what it cannot do.",
+    "title": "Best AI Music Video Generators in 2026: Compared",
+    "description": "The best AI music video generators compared by job: a video for your own song, beat-synced visuals, or a rap video starring you and a friend.",
     "readTime": "6 min read",
     "category": "Comparison",
     "tag": "AI Tools",
@@ -126,8 +126,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "best-ai-rap-generator",
-    "title": "Best AI Rap Generator in 2026: Lyrics, Songs or a Rap Video?",
-    "description": "The best AI rap generator depends on what you want back: rap lyrics, a full rap song with vocals, or a rap video of real people. Which tools do each, what they need from you, and where each one stops.",
+    "title": "Best AI Rap Generator in 2026: Lyrics, Songs or Video?",
+    "description": "The best AI rap generator depends on what you want back: rap lyrics, a full song with vocals, or a rap video of real people. Where each one stops.",
     "readTime": "5 min read",
     "category": "Comparison",
     "tag": "Rap AI",
@@ -142,8 +142,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "best-rap-duos",
-    "title": "Best Rap Duos of All Time: 15 Hip-Hop Duos, From OutKast to Unc & Phew",
-    "description": "The best rap duos of all time, from OutKast, Eric B. & Rakim and Mobb Deep to UGK, Run the Jewels and Rae Sremmurd: who they are, where they came from, and the record to start with. Plus how to make a rap duo video of you and a friend.",
+    "title": "Best Rap Duos of All Time: 15 Hip-Hop Duos Ranked",
+    "description": "The best rap duos of all time, from OutKast and Eric B. & Rakim to UGK and Run the Jewels: who they are, where they came from, and what to play first.",
     "readTime": "6 min read",
     "category": "Hip-Hop History",
     "tag": "Rap Duos",
@@ -158,8 +158,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "how-to-make-an-ai-rap-video",
-    "title": "How to Make an AI Rap Video: Step by Step, With Screenshots (2026)",
-    "description": "How to make an AI rap video of you and a friend from two photos: every step in the studio with screenshots, what it costs, how long it takes, and how to fix flagged or blurry results.",
+    "title": "How to Make an AI Rap Video: Step by Step (2026)",
+    "description": "How to make an AI rap video of you and a friend from two photos: every step with screenshots, what it costs, how long it takes, and how to fix blurry results.",
     "readTime": "5 min read",
     "category": "Tutorial",
     "tag": "Creation Guide",
@@ -175,7 +175,7 @@ export const GUIDES: Guide[] = [
   {
     "slug": "quavo-and-takeoff",
     "title": "Quavo and Takeoff: Are They Related? Unc & Phew Explained",
-    "description": "Are Quavo and Takeoff related? Yes: Quavo is Takeoff’s uncle. Who Unc & Phew are, what they released together, where Offset fits in Migos, and why their Hotel Lobby performance became an AI trend.",
+    "description": "Are Quavo and Takeoff related? Yes: Quavo is Takeoff's uncle. What Unc & Phew released, where Offset fits in Migos, and how the AI trend started.",
     "readTime": "4 min read",
     "category": "Deep Dive",
     "tag": "Unc & Phew",
@@ -190,8 +190,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "hotel-lobby-song-quavo-takeoff",
-    "title": "Hotel Lobby Meaning: The Quavo & Takeoff Song Behind the AI Trend",
-    "description": "What \"Hotel Lobby\" by Quavo & Takeoff means, why they called themselves Unc & Phew (Quavo is Takeoff's uncle), the orange A COLORS SHOW performance, and how it became the 2026 AI trend.",
+    "title": "Hotel Lobby Meaning: The Quavo & Takeoff Song Explained",
+    "description": "What Hotel Lobby by Quavo & Takeoff means, why they called themselves Unc & Phew, and how the orange A COLORS SHOW performance became an AI trend.",
     "readTime": "5 min read",
     "category": "Deep Dive",
     "tag": "Hotel Lobby",
@@ -206,8 +206,8 @@ export const GUIDES: Guide[] = [
   },
   {
     "slug": "how-to-do-the-hotel-lobby-trend",
-    "title": "How to Do the Hotel Lobby Trend: Free, Step by Step (2026)",
-    "description": "How to do the viral Hotel Lobby trend with AI, a CapCut template or for free: step-by-step, photo tips, and what to know before you post.",
+    "title": "How to Do the Hotel Lobby Trend: Free, Step by Step",
+    "description": "How to do the viral Hotel Lobby trend with AI, a CapCut template or for free: step by step, photo tips, and what to know before you post.",
     "readTime": "5 min read",
     "category": "Tutorial",
     "tag": "Hotel Lobby",
@@ -228,8 +228,8 @@ export const GUIDES: Guide[] = [
 
   {
     "slug": "hotel-lobby-ai-apps",
-    "title": "Hotel Lobby AI Apps & Generators Compared: Which One Fits You?",
-    "description": "The four ways to make a Hotel Lobby AI video, compared side by side: Higgsfield Genjutsu, CapCut templates, general video generators, and a dedicated two-photo AI maker. What each is good at, what it costs, and which one fits you.",
+    "title": "Hotel Lobby AI Apps Compared: Which One Fits You?",
+    "description": "Four ways to make a Hotel Lobby AI video, side by side: Higgsfield Genjutsu, CapCut templates, general video generators, and a two-photo AI maker.",
     "readTime": "5 min read",
     "category": "Comparison",
     "tag": "Hotel Lobby",
@@ -246,7 +246,7 @@ export const GUIDES: Guide[] = [
   {
     "slug": "how-to-make-a-diss-track",
     "title": "How to Make a Diss Track (Friendly Roast) with AI",
-    "description": "How to write a friendly diss track for someone you actually like: picking the target, finding the angle, the two-bar structure, and the safety rules that keep it fun. Then how to turn it into an AI rap video starring the two of you.",
+    "description": "How to write a friendly diss track for someone you like: picking the target, finding the angle, the two-bar structure, and the rules that keep it fun.",
     "readTime": "5 min read",
     "category": "Lyrics & Prompts",
     "tag": "Diss Track",

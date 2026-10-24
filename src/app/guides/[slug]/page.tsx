@@ -17,7 +17,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!guide) return {};
   const pngImage = `https://phototorap.com/guides/${guide.slug}.png`;
   return {
-    title: `${guide.title} | PhotoToRap AI Guides`,
+    // 不再追加 " | PhotoToRap AI Guides"（21 字符）：
+    // 原标题本身已 49~70 字符，加后缀后全部 70~97，SERP 必被截断。
+    // 现在 title 字段直接控制在 50~60 字符，品牌由 og:site_name 与 SERP 站点名承载。
+    title: guide.title,
     description: guide.description,
     alternates: {
       canonical: `https://phototorap.com/guides/${guide.slug}`,

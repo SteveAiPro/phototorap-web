@@ -2,17 +2,17 @@ import React from 'react';
 import EffectPage, { EffectConfig } from '@/components/EffectPage';
 
 export const metadata = {
-  title: 'Halloween Rap Song Generator: A Spooky Rap Video of You | PhotoToRap AI',
+  title: 'Halloween Rap Song Generator: A Spooky Video of You',
   description:
     'Make a personalized Halloween rap song video: upload your photos, drop in your costume or party theme, and get a lip-synced spooky rap in about 3 minutes.',
   openGraph: {
-    title: 'Halloween Rap Song Generator: A Spooky Rap Video of You | PhotoToRap AI',
+    title: 'Halloween Rap Song Generator: A Spooky Video of You',
     description:
       'Make a personalized Halloween rap song video: upload your photos, drop in your costume or party theme, and get a lip-synced spooky rap in about 3 minutes.',
     url: 'https://phototorap.com/halloween-rap-song',
   },
   twitter: {
-    title: 'Halloween Rap Song Generator: A Spooky Rap Video of You | PhotoToRap AI',
+    title: 'Halloween Rap Song Generator: A Spooky Video of You',
     description:
       'Make a personalized Halloween rap song video: upload your photos, drop in your costume or party theme, and get a lip-synced spooky rap in about 3 minutes.',
   },
