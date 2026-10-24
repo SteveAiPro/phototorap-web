@@ -12,6 +12,7 @@ export const metadata = {
     url: 'https://phototorap.com/hotel-lobby-ai',
   },
   twitter: {
+    card: 'summary_large_image',
     title: 'Hotel Lobby AI Rap Video Generator | PhotoToRap AI',
     description:
       'Make the viral Hotel Lobby COLORS booth rap video from two photos. Lip-synced duo performance on an original beat, vertical 9:16, ready in about 3 minutes.',
