@@ -8,6 +8,87 @@ import { GUIDES, Guide } from '@/data/guides';
 import { Clock, ArrowLeft, ArrowRight, Mic, Sparkles, BookOpen } from 'lucide-react';
 import { marked } from 'marked';
 
+/**
+ * 从 guide 正文中提取步骤，生成 HowTo 结构化数据。支持两种写法：
+ *  A. 「step by step」小节 + 列表项（hotel-lobby-trend / capcut 等）
+ *  B. `## Step 1: ...` 逐节标题（how-to-make-an-ai-rap-video 等）
+ * 提取不到 ≥3 步时返回 null，不输出 HowTo（避免空壳 schema）。
+ */
+function extractHowToSteps(content: string): { name: string; text: string }[] | null {
+  const clean = (s: string) =>
+    s
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // 链接转纯文本
+      .replace(/\*\*/g, '')
+      .replace(/^"|"$/g, '')
+      .replace(/\.$/, '')
+      .trim();
+
+  const lines = content.split('\n');
+  const steps: { name: string; text: string }[] = [];
+
+  // —— 模式 B：## Step N: 标题 ——
+  let stepIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const header = line.match(/^##\s+Step\s+\d+\s*[:：]?\s*(.+)$/i);
+    if (header) {
+      steps.push({ name: clean(header[1]).slice(0, 70), text: '' });
+      stepIdx = steps.length - 1;
+      continue;
+    }
+    // 小节正文并入当前步骤的 text（取第一段非空内容）
+    if (stepIdx >= 0 && line.trim() && !steps[stepIdx].text && !line.startsWith('#')) {
+      steps[stepIdx].text = clean(line).slice(0, 300);
+    }
+  }
+
+  // —— 模式 A：step by step 小节 + 列表项 ——
+  if (steps.length < 3) {
+    steps.length = 0;
+    let inSection = false;
+    for (const line of lines) {
+      if (line.startsWith('## ')) {
+        inSection = /step by step/i.test(line);
+        continue;
+      }
+      if (inSection && /^\s*([-*]|\d+[.)])\s+/.test(line)) {
+        const text = clean(line.replace(/^\s*([-*]|\d+[.)])\s+/, ''));
+        if (text.length > 10) {
+          const bold = line.match(/\*\*([^*]+)\*\*/);
+          steps.push({
+            name: (bold ? clean(bold[1]) : text).slice(0, 70),
+            text,
+          });
+        }
+      }
+    }
+  }
+
+  return steps.length >= 3 ? steps : null;
+}
+
+/**
+ * 从 guide 正文的「## FAQ」小节提取问答对，生成 FAQPage 结构化数据。
+ * 格式为 **问题？** 答案 的段落；不足 3 组时返回 null。
+ */
+function extractFaqs(content: string): { q: string; a: string }[] | null {
+  const m = content.match(/##\s+FAQ\s*\n([\s\S]*?)(?:\n##\s|$)/i);
+  if (!m) return null;
+  const pairs: { q: string; a: string }[] = [];
+  for (const p of m[1].split(/\n{2,}/)) {
+    const qm = p.match(/^\s*\*\*([^*]+\?)\*\*\s*([\s\S]+)$/);
+    if (qm) {
+      const a = qm[2]
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/\*\*/g, '')
+        .replace(/\*/g, '')
+        .trim();
+      if (a.length > 20) pairs.push({ q: qm[1].trim(), a });
+    }
+  }
+  return pairs.length >= 3 ? pairs : null;
+}
+
 export async function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
 }
@@ -55,6 +136,12 @@ export default function GuidePost({ params }: { params: { slug: string } }) {
   if (!guide) notFound();
 
   const related = GUIDES.filter((g) => guide.relatedGuides.includes(g.slug));
+
+  // HowTo schema：教程类 guide 自动提取步骤（无步骤则为 null，不输出 schema）
+  const howToSteps = extractHowToSteps(guide.content);
+
+  // FAQPage schema：guide 的 FAQ 小节自动提取问答对
+  const faqs = extractFaqs(guide.content);
 
   return (
     <div className="min-h-screen bg-[#090A0F] text-[#F3F4F6]">
@@ -277,6 +364,77 @@ export default function GuidePost({ params }: { params: { slug: string } }) {
             }),
           }}
         />
+
+        {/* BreadcrumbList Schema —— 页面有可见面包屑导航，补 schema 让 Google 显示路径 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                {
+                  '@type': 'ListItem',
+                  position: 1,
+                  name: 'Home',
+                  item: 'https://phototorap.com',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 2,
+                  name: 'Guides',
+                  item: 'https://phototorap.com/guides',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 3,
+                  name: guide.title,
+                  item: `https://phototorap.com/guides/${guide.slug}`,
+                },
+              ],
+            }),
+          }}
+        />
+
+        {/* HowTo Schema —— 教程类 guide 的「step by step」小节自动提取为步骤 */}
+        {howToSteps && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'HowTo',
+                name: guide.title,
+                description: guide.description,
+                totalTime: 'PT5M',
+                step: howToSteps.map((s, i) => ({
+                  '@type': 'HowToStep',
+                  position: i + 1,
+                  name: s.name,
+                  text: s.text,
+                })),
+              }),
+            }}
+          />
+        )}
+
+        {/* FAQPage Schema —— FAQ 小节自动提取，争取 FAQ 富媒体结果 */}
+        {faqs && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: faqs.map((f) => ({
+                  '@type': 'Question',
+                  name: f.q,
+                  acceptedAnswer: { '@type': 'Answer', text: f.a },
+                })),
+              }),
+            }}
+          />
+        )}
       </main>
 
       <Footer />
