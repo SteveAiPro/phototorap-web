@@ -12,6 +12,7 @@ export const metadata = {
     url: 'https://phototorap.com/diss-track-generator',
   },
   twitter: {
+    card: 'summary_large_image',
     title: 'Diss Track Generator: Make a Friendly Diss Rap Video',
     description:
       'Turn a photo and one roast topic into a diss track video: original diss bars about your friend, performed lip-synced in about 3 minutes. Friendly roasts only.',

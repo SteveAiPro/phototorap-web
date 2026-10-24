@@ -38,7 +38,7 @@ export default function PrivacyPage() {
                 <strong>Account & Authentication:</strong> Email addresses and basic profile information provided during authentication.
               </li>
               <li>
-                <strong>Usage & Analytics:</strong> Privacy-friendly analytics (via Plausible Analytics) tracking anonymous pageviews without persistent cross-site tracking cookies.
+                <strong>Usage &amp; Analytics:</strong> Aggregated usage statistics (pages viewed, session duration, referring source, country and device type) collected via Google Analytics 4. Google Analytics sets first-party cookies to distinguish visitors; we do not use this data to personally identify you and do not combine it with other data we hold about you.
               </li>
             </ul>
           </section>

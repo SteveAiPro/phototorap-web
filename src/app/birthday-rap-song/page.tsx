@@ -12,6 +12,7 @@ export const metadata = {
     url: 'https://phototorap.com/birthday-rap-song',
   },
   twitter: {
+    card: 'summary_large_image',
     title: 'Birthday Rap Song Generator: A Personal Rap Video Gift',
     description:
       'Make a personalized birthday rap song video: upload photos of you and the birthday star, add one line about them, and get a lip-synced duo rap in 3 minutes.',

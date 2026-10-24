@@ -12,6 +12,7 @@ export const metadata = {
     url: 'https://phototorap.com/halloween-rap-song',
   },
   twitter: {
+    card: 'summary_large_image',
     title: 'Halloween Rap Song Generator: A Spooky Video of You',
     description:
       'Make a personalized Halloween rap song video: upload your photos, drop in your costume or party theme, and get a lip-synced spooky rap in about 3 minutes.',

@@ -79,14 +79,6 @@ export default function Footer() {
                   support@phototorap.com
                 </a>
               </li>
-              <li>
-                <a
-                  href="mailto:gaoqian2580@gmail.com"
-                  className="text-gray-400 hover:text-white text-[11px] transition-colors"
-                >
-                  Alt: gaoqian2580@gmail.com
-                </a>
-              </li>
               <li className="pt-1">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-[10px]">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>

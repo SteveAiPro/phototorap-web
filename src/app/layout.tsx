@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Turn photos into viral AI rap videos in 3 minutes. Upload 1 or 2 selfies to get lip-synced rap duo & solo clips in Hotel Lobby style. Free preview.',
   metadataBase: new URL('https://phototorap.com'),
   alternates: {
-    canonical: 'https://phototorap.com',
+    canonical: 'https://phototorap.com/',
     // 注意：本站没有语言路由（多语言为客户端切换，不产生独立 URL），
     // /zh /es /fr /pt /de /ja /ko 全部返回 404，因此不能声明 hreflang 替代版本。
     // 与 src/app/sitemap.ts 中的处理保持一致；日后实现真正的 i18n 路由后再恢复。
@@ -65,14 +65,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <head>
-        {/* Plausible Analytics for phototorap.com */}
-        <script
-          defer
-          data-domain="phototorap.com"
-          src="https://plausible.io/js/script.js"
-        />
-
-        {/* Google Analytics 4 (GA4) */}
+        {/* Google Analytics 4 (GA4) —— 全站唯一统计源。
+            2026-10-24 移除 Plausible：双重统计浪费一次额外请求，且隐私政策
+            当时只声明了 Plausible，与 GA4 事实不符（合规风险）。
+            历史 Plausible 数据仍保留在其后台，不影响本侧报表。 */}
         {gaId && (
           <>
             <script
